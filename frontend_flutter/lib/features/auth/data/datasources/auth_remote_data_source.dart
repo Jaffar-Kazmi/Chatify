@@ -17,12 +17,12 @@ class AuthRemoteDataSource {
         'Content-Type': 'application/json'
       }
     );
-    return UserModel.fromJson(jsonDecode(response.body));
+    return UserModel.fromJson(jsonDecode(response.body)['user']);
   }
 
   Future<UserModel> register({required String username, required String email, required String password}) async {
     final response = await http.post(
-        Uri.parse('$baseUrl/login'),
+        Uri.parse('$baseUrl/register'),
         body: jsonEncode({
           'username': username,
           'email': email,
@@ -32,6 +32,9 @@ class AuthRemoteDataSource {
           'Content-Type': 'application/json'
         }
     );
-    return UserModel.fromJson(jsonDecode(response.body));
+
+    print(response.body);
+
+    return UserModel.fromJson(jsonDecode(response.body)['user']);
   }
 }

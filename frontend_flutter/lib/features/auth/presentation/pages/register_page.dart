@@ -1,7 +1,11 @@
 import 'package:chat_app/core/theme.dart';
+import 'package:chat_app/features/auth/presentation/bloc/auth_state.dart';
 import 'package:chat_app/features/auth/presentation/widgets/auth_input_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/login_prompt.dart';
 
@@ -17,16 +21,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _showInputValues() {
-    String username = _usernameController.text;
-    String email = _emailController.text;
-    String password = _passwordController.text;
-
-    print('Username: $username');
-    print('Email: $email');
-    print('Password: $password');
-  }
-
   @override
   void dispose() {
     _usernameController.dispose();
@@ -34,6 +28,17 @@ class _RegisterPageState extends State<RegisterPage> {
     _passwordController.dispose();
     super.dispose();
   }
+
+  void _onRegister() {
+    BlocProvider.of<AuthBloc>(context).add(
+        RegisterEvent(
+            username: _usernameController.text.trim(),
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim()
+        ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -57,9 +62,27 @@ class _RegisterPageState extends State<RegisterPage> {
                   icon: Icons.password,
                   controller: _passwordController),
               SizedBox(height: 20,),
-              AuthButton(
-                  text: 'Register',
-                  onPressed: () {}
+              BlocConsumer<AuthBloc, AuthState> (
+                  builder: (context, state) {
+                    if (state is AuthLoading) {
+                      return Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                    return  AuthButton(
+                        text: 'Register',
+                        onPressed: _onRegister
+                    );
+                  },
+                  listener: (context, state) {
+                    if (state is AuthSuccess) {
+                      Navigator.pushNamed(context, '/login');
+                    } else if (state is AuthFailure) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(state.error))
+                      );
+                    }
+                  }
               ),
               SizedBox(height: 20,),
               LoginPrompt(
