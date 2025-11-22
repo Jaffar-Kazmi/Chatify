@@ -15,7 +15,7 @@ export const register = async(req: Request, res: Response) => {
             'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *', [username, email, hashedPassword]
         );
         const user = result.rows[0];
-        res.status(201).json({message: 'User registered successfully', user})
+        res.status(201).json({user})
     } catch (error) {
         res.status(500).json({error: 'Failed to register'})
     }
@@ -34,7 +34,8 @@ export const login = async(req: Request, res: Response): Promise<any> => {
         if(!isMatch) return res.status(400).json({error: 'Invalid credentials'});
 
         const token = jwt.sign({id: user.id}, JWT_SECRET, {expiresIn: '10h'});
-        res.json({message: 'Logged in successfully', token});
+        let finalResult = {...user, token}
+        res.json({user: finalResult});
     } catch (error) {
         res.status(500).json({error: "Failed to login"})
     }
