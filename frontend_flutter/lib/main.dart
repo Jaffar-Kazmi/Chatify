@@ -52,12 +52,12 @@ class MyApp extends StatelessWidget {
         title: 'Flutter Demo',
         theme: AppTheme.darkTheme,
         debugShowCheckedModeBanner: false,
-        home: ConversationsPage(),
+        home: RegisterPage(),
         routes: {
           '/login': (context) => LoginPage(),
           '/register': (context) => RegisterPage(),
           '/chat': (context) => ChatPage(),
-          '/conversations': (context) => ConversationsPage(),
+          '/home': (context) => ConversationsPage(),
         },
       ),
     );
