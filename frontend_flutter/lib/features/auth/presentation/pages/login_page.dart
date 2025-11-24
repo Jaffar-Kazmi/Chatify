@@ -73,7 +73,7 @@ class _LoginPage extends State<LoginPage> {
                   listener: (context, state) {
                     if (state is AuthSuccess) {
                       print("Good");
-                      Navigator.pushNamed(context, '/chat');
+                      Navigator.pushNamedAndRemoveUntil(context, '/home', (route)=> false);
                     } else if (state is AuthFailure) {
                       ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text(state.error))
@@ -85,7 +85,9 @@ class _LoginPage extends State<LoginPage> {
               LoginPrompt(
                 title: 'Don\'t have an account? ',
                 subTitle: 'Register',
-                onTap: () {}
+                onTap: () {
+                  Navigator.pushNamed(context, '/register');
+                }
               ),
             ],
           ),
