@@ -13,7 +13,7 @@ router.get('/', verifyToken, async (req: Request, res: Response) => {
     try{
         const result = await pool.query(
             `
-            SELECT c.id AS conversation_id, u.username AS paticipant_name, m.content AS last_message, m.created_at AS last_message_time
+            SELECT c.id AS conversation_id, u.username AS participant_name, m.content AS last_message, m.created_at AS last_message_time
             FROM conversations c 
             JOIN users u ON (u.id = c.participant_two AND u.id != $1)
             LEFT JOIN LATERAL (

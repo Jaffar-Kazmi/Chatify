@@ -1,8 +1,25 @@
 import 'package:chat_app/core/theme.dart';
+import 'package:chat_app/features/conversation/presentation/bloc/conversations_bloc.dart';
+import 'package:chat_app/features/conversation/presentation/bloc/conversations_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class MessagePage extends StatelessWidget {
-  const MessagePage({super.key});
+import '../bloc/conversations_event.dart';
+
+class ConversationsPage extends StatefulWidget {
+  const ConversationsPage({super.key});
+
+  @override
+  State<ConversationsPage> createState() => _ConversationsPageState();
+}
+
+class _ConversationsPageState extends State<ConversationsPage> {
+
+  @override
+  void initState() {
+    super.initState();
+    BlocProvider.of<ConversationsBloc>(context).add(FetchConversations());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,16 +77,31 @@ class MessagePage extends StatelessWidget {
                     topRight: Radius.circular(50)
                 )
               ),
-              child: ListView(
-                children: [
-                  _buildMessageTile('Zain Ali', 'Hello', '10:00 AM'),
-                  _buildMessageTile('Jaffar', 'Kesy ho?', '10:09 AM'),
-                  _buildMessageTile('Raza', 'What are you doing?', '08:18 AM'),
-                  _buildMessageTile('Kaleem', 'Aa jao', '10:00 AM'),
-                  _buildMessageTile('Ehtisham Hussain', 'Kia hal', '10:00 AM'),
-                  _buildMessageTile('Hassan', 'Mn thk', '10:00 AM'),
-                  _buildMessageTile('Fakhar', 'Hi', '10:00 AM'),
-                  ],
+              child: BlocBuilder<ConversationsBloc, ConversationState>(
+                builder: (context, state) {
+                  if (state is ConversationLoading) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  else if (state is ConversationLoaded) {
+                    return ListView.builder(
+                      itemCount: state.conversations.length,
+                      itemBuilder : (context, index) {
+                        final conversation = state.conversations[index];
+                        return _buildMessageTile(
+                          conversation.participantName,
+                          conversation.lastMessage,
+                          conversation.lastMessageTime.toString(),
+                        );
+                      }
+                    );
+                  }
+                  else if (state is ConversationError) {
+                    return Center(child: Text(state.error));
+                  }
+                  else {
+                    return Center(child: Text("No conversations found"),);
+                  }
+                },
               ),
             ),
           ),
@@ -83,7 +115,7 @@ class MessagePage extends StatelessWidget {
       contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       leading: CircleAvatar(
         radius: 30,
-        backgroundImage: NetworkImage("https://placehold.co/400"),
+        backgroundImage: NetworkImage("https://picsum.photos/200"),
       ),
       title: Text(
         name,
@@ -109,7 +141,7 @@ class MessagePage extends StatelessWidget {
         children: [
         CircleAvatar(
           radius: 30,
-          backgroundImage: NetworkImage('https://placehold.co/400'),
+          backgroundImage: NetworkImage('https://picsum.photos/200'),
         ),
         SizedBox(height: 5),
         Text(
