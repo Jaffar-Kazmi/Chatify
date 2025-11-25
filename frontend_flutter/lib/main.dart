@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:chat_app/core/theme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'core/socket_service.dart';
 import 'features/auth/domain/usecases/login_use_case.dart';
 import 'features/auth/domain/usecases/register_use_case.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
@@ -20,7 +21,10 @@ import 'features/conversation/data/datasources/coversation_remote_data_source.da
 import 'features/conversation/data/repositories/conversations_repository_implementation.dart';
 import 'features/conversation/presentation/bloc/conversations_bloc.dart';
 
-void main() {
+void main() async {
+  final socketService = SocketService();
+  await socketService.initSocket();
+
   final authRepository = AuthRepositoryImplementation(authRemoteDataSource: AuthRemoteDataSource());
   final conversationsRepository = ConversationRepositoryImplementation(conversationsRemoteDataSource: ConversationsRemoteDataSource());
   final messagesRepository = MessageRepositoryImplementation(messageRemoteDataSource: MessageRemoteDataSource());

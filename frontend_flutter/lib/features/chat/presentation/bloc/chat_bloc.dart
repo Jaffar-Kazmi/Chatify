@@ -25,6 +25,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       final messages = await fetchMessagesUseCase(event.conversationId);
       _messages.clear();
       _messages.addAll(messages);
+      _messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
       emit(ChatLoadedState(List.from(messages)));
 
       _socketService.socket.emit('joinConversation', event.conversationId);
@@ -61,9 +62,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         conversationId: event.message['conversation_id'],
         senderId: event.message['sender_id'],
         content: event.message['content'],
-        createdAt: event.message['created_at']
+        createdAt: DateTime.parse(event.message['created_at'])
     );
     _messages.add(message);
+    _messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     emit(ChatLoadedState(List.from(List.from(_messages))));
   }
 }

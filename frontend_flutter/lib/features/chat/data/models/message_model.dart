@@ -6,7 +6,7 @@ class MessageModel extends MessageEntity{
     required String conversationId,
     required String senderId,
     required String content,
-    required String createdAt,
+    required DateTime createdAt,
   }): super(
     id: id,
     conversationId: conversationId,
@@ -21,7 +21,7 @@ class MessageModel extends MessageEntity{
       conversationId: json['conversation_id'],
       senderId: json['sender_id'],
       content: json['content'],
-      createdAt: json['created_at']
+      createdAt: DateTime.parse(json['created_at'])
     );
   }
 }
