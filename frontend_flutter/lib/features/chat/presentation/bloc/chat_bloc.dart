@@ -28,6 +28,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       _messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
       emit(ChatLoadedState(List.from(messages)));
 
+      _socketService.socket.off('newMessage');
+
       _socketService.socket.emit('joinConversation', event.conversationId);
       _socketService.socket.on('newMessage', (data) {
         print("step1 - receive: $data");
