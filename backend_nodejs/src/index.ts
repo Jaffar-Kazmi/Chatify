@@ -7,6 +7,7 @@ import conversationRoutes from './routes/conversationRoutes'
 import messageRoutes from './routes/messageRoutes'
 import { Socket } from "dgram";
 import { saveMessage } from "./controllers/messageController";
+import contactRoutes from "./routes/contactRoutes";
 
 const app = express();
 const server = http.createServer(app);
@@ -22,6 +23,8 @@ const io = new Server(server, {
 app.use('/auth', authRoutes);
 app.use('/conversations', conversationRoutes)
 app.use('/messages', messageRoutes)
+app.use('/contacts', contactRoutes)
+
 
 io.on('connection', (socket) => {
     console.log('A user id connected: ', socket.id);
