@@ -6,17 +6,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../../core/socket_service.dart';
+import '../../domain/usecases/fetch_daily_question_usecase.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final FetchMessagesUseCase fetchMessagesUseCase;
+  final FetchDailyQuestionUseCase fetchDailyQuestionUseCase;
   final SocketService _socketService = SocketService();
   final List<MessageEntity> _messages = [];
   final _storage = FlutterSecureStorage();
 
-  ChatBloc({required this.fetchMessagesUseCase}) : super(ChatLoadingState()) {
+  ChatBloc({required this.fetchMessagesUseCase, required this.fetchDailyQuestionUseCase}) : super(ChatLoadingState()) {
     on<LoadMessagesEvent>(_onLoadMessages);
     on<SendMessageEvent>(_onSendMessage);
     on<ReceiveMessageEvent>(_onReceiveMessage);
+    on<LoadDailyQuestionEvent>(_onLoadDailyQuestion);
   }
 
   Future<void> _onLoadMessages(LoadMessagesEvent event, Emitter<ChatState> emit) async {
@@ -69,5 +72,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _messages.add(message);
     _messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     emit(ChatLoadedState(List.from(List.from(_messages))));
+  }
+
+  Future<void> _onLoadDailyQuestion(LoadDailyQuestionEvent event, Emitter<ChatState> emit) async {
+    try {
+      emit(ChatLoadingState());
+      final dailyQuestion = await fetchDailyQuestionUseCase(event.conversationId);
+      emit(ChatDailyQuestionLoadedState(dailyQuestion));
+    } catch (error) {
+      emit(ChatErrorState('Failed to load daily question'));
+    }
+
   }
 }
