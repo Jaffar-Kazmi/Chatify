@@ -1,3 +1,4 @@
+import 'package:chat_app/features/chat/domain/entities/daily_question_entity.dart';
 import 'package:chat_app/features/chat/domain/entities/message_entity.dart';
 import 'package:chat_app/features/chat/domain/repositories/message_repository.dart';
 
@@ -19,6 +20,11 @@ class MessageRepositoryImplementation implements MessagesRepository {
   Future<void> sendMessage(MessageEntity message) {
     // TODO: implement sendMessage
     throw UnimplementedError();
+  }
+
+  @override
+  Future<DailyQuestionEntity> fetchDailyQuestion(String conversationId) async {
+    return await messageRemoteDataSource.fetchDailyQuestion(conversationId);
   }
   
 }

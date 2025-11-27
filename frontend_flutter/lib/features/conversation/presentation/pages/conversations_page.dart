@@ -5,6 +5,7 @@ import 'package:chat_app/features/conversation/presentation/bloc/conversations_s
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../contact/presentation/pages/contacts_page.dart';
 import '../bloc/conversations_event.dart';
 
 class ConversationsPage extends StatefulWidget {
@@ -96,7 +97,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
                           },
                           child: _buildMessageTile(
                             conversation.participantName,
-                            conversation.lastMessage,
+                            conversation.lastMessage ?? 'No message',
                             conversation.lastMessageTime.toString(),
                           ),
                         );
@@ -114,7 +115,17 @@ class _ConversationsPageState extends State<ConversationsPage> {
             ),
           ),
         ],
-      )
+      ),
+      floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ContactsPage()),
+            );
+          },
+          backgroundColor: DefaultColors.buttonColor,
+          child: Icon(Icons.contacts),
+      ),
     );
   }
 

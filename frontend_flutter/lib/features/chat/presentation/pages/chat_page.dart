@@ -21,6 +21,8 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final _storage = FlutterSecureStorage();
   String userId = '';
+  String botId = "00000000-0000-0000-0000-000000000000";
+
 
   @override
   void initState() {
@@ -90,8 +92,12 @@ class _ChatPageState extends State<ChatPage> {
                     itemBuilder: (context, index) {
                       final message = state.messages[index];
                       final isSentMessage = message.senderId == userId;
+                      final isDailyQuestion = message.senderId == botId;
+
                       if(isSentMessage) {
                         return _buildSentMessage(context, message.content);
+                      } else if (isDailyQuestion) {
+                        return _buildDailyQuestionMessage(context, message.content);
                       } else {
                         return _buildReceivedMessage(context, message.content);
                       }
@@ -188,4 +194,23 @@ class _ChatPageState extends State<ChatPage> {
       ),
     );
   }
+
+  Widget _buildDailyQuestionMessage(BuildContext context, String message) {
+    return Align(
+      alignment: Alignment.center,
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 15),
+        padding: EdgeInsets.all(15),
+        decoration: BoxDecoration(
+            color: DefaultColors.dailyQuestionColor,
+            borderRadius: BorderRadius.circular(15)
+        ),
+        child: Text(
+          '🤖 Daily Question: $message',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+        ),
+      ),
+    );
+  }
+
 }
