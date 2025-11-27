@@ -8,6 +8,7 @@ import messageRoutes from './routes/messageRoutes'
 import { Socket } from "dgram";
 import { saveMessage } from "./controllers/messageController";
 import contactRoutes from "./routes/contactRoutes";
+import './cron/cronJob';
 
 const app = express();
 const server = http.createServer(app);
