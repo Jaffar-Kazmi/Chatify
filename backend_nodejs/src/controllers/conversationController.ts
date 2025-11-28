@@ -119,3 +119,28 @@ export const getDailyQuestion = async (req: Request, res: Response): Promise<any
         res.status(500).json({error: 'Failed to fetch daily question'});
     }
 }
+
+export const deleteConversation = async (req: Request, res: Response) => {
+  const { id } = req.params; // conversationId
+
+  try {
+    // delete messages first (FK constraint)
+    await pool.query(
+      "DELETE FROM messages WHERE conversation_id = $1",
+      [id]
+    );
+
+    // delete conversation
+    await pool.query(
+      "DELETE FROM conversations WHERE id = $1",
+      [id]
+    );
+
+    return res.status(200).json({ message: "Conversation deleted" });
+  } catch (e) {
+    console.error("Delete conversation error:", e);
+    return res
+      .status(500)
+      .json({ error: "Failed to delete conversation" });
+  }
+};

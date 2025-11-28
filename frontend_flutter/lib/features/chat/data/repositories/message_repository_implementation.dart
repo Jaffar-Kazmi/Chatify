@@ -26,5 +26,9 @@ class MessageRepositoryImplementation implements MessagesRepository {
   Future<DailyQuestionEntity> fetchDailyQuestion(String conversationId) async {
     return await messageRemoteDataSource.fetchDailyQuestion(conversationId);
   }
-  
+
+  @override
+  Future<void> deleteConversation(String conversationId) async {
+    return await messageRemoteDataSource.deleteConversation(conversationId);
+  }
 }

@@ -1,8 +1,11 @@
 import 'package:chat_app/core/widgets/profile_avatar.dart';
 import 'package:chat_app/features/chat/presentation/bloc/chat_event.dart';
+import 'package:chat_app/features/conversation/presentation/bloc/conversations_bloc.dart';
+import 'package:chat_app/features/conversation/presentation/bloc/conversations_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme.dart';
 import '../bloc/chat_bloc.dart';
@@ -13,7 +16,12 @@ class ChatPage extends StatefulWidget {
   final String mate;
   final String? mateProfileImageUrl;
 
-  const ChatPage({super.key, required this.conversationId, required this.mate, this.mateProfileImageUrl});
+  const ChatPage({
+    super.key,
+    required this.conversationId,
+    required this.mate,
+    this.mateProfileImageUrl,
+  });
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -21,15 +29,23 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
-  final _storage = FlutterSecureStorage();
+  final _storage = const FlutterSecureStorage();
+  final ImagePicker _picker = ImagePicker();
+
   String userId = '';
   String botId = "00000000-0000-0000-0000-000000000000";
 
+  // SEARCH STATE  -----------------------------
+  bool _isSearching = false;
+  String _searchQuery = '';
+  final TextEditingController _searchController =
+  TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    BlocProvider.of<ChatBloc>(context).add(LoadMessagesEvent(widget.conversationId));
+    BlocProvider.of<ChatBloc>(context)
+        .add(LoadMessagesEvent(widget.conversationId));
     fetchUserId();
   }
 
@@ -43,15 +59,57 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void dispose() {
     _messageController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
   void _sendMessage() {
     final content = _messageController.text.trim();
     if (content.isNotEmpty) {
-      BlocProvider.of<ChatBloc>(context).add(
-          SendMessageEvent(widget.conversationId, content));
+      BlocProvider.of<ChatBloc>(context)
+          .add(SendMessageEvent(widget.conversationId, content));
       _messageController.clear();
+    }
+  }
+
+  // OPEN CAMERA  ------------------------------
+  Future<void> _openCamera() async {
+    final XFile? photo =
+    await _picker.pickImage(source: ImageSource.camera);
+    if (photo == null) return;
+    // TODO: upload + send as image message
+    print('Picked image: ${photo.path}');
+  }
+
+  // DELETE CONVERSATION -----------------------
+  Future<void> _onDeleteConversation() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete chat'),
+        content: const Text(
+            'Are you sure you want to delete this conversation?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      BlocProvider.of<ChatBloc>(context)
+          .add(DeleteConversationEvent(widget.conversationId));
+
+      final conversationsBloc = context.read<ConversationsBloc>();
+      conversationsBloc.add(FetchConversations());
+
+      Navigator.pop(context);
     }
   }
 
@@ -59,63 +117,108 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
+        title: _isSearching
+            ? TextField(
+          controller: _searchController,
+          autofocus: true,
+          style:
+          const TextStyle(fontSize: 16, color: Colors.white),
+          decoration: const InputDecoration(
+            hintText: 'Search in chat',
+            hintStyle: TextStyle(color: Colors.grey),
+            border: InputBorder.none,
+          ),
+          onChanged: (value) {
+            setState(() => _searchQuery = value.toLowerCase());
+          },
+        )
+            : Row(
           children: [
             ProfileAvatar(
               profileImageUrl: widget.mateProfileImageUrl,
               radius: 25,
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Text(
               widget.mate,
               style: Theme.of(context).textTheme.titleMedium,
-            )
+            ),
           ],
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(Icons.search))
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                _isSearching = !_isSearching;
+                _searchQuery = '';
+                _searchController.clear();
+              });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: _onDeleteConversation,
+          ),
         ],
-
       ),
       body: Column(
         children: [
           Expanded(
             child: BlocBuilder<ChatBloc, ChatState>(
               builder: (context, state) {
-                if (state is ChatLoadingState){
-                  return Center(child: CircularProgressIndicator(),);
-                }
-                else if (state is ChatLoadedState){
-                  return ListView.builder(
-                    padding: EdgeInsets.all(20),
-                    itemCount: state.messages.length,
-                    itemBuilder: (context, index) {
-                      final message = state.messages[index];
-                      final isSentMessage = message.senderId == userId;
-                      final isDailyQuestion = message.senderId == botId;
+                if (state is ChatLoadingState) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                } else if (state is ChatLoadedState) {
+                  final all = state.messages;
+                  final filtered = _searchQuery.isEmpty
+                      ? all
+                      : all
+                      .where((m) => m.content
+                      .toLowerCase()
+                      .contains(_searchQuery))
+                      .toList();
 
-                      if(isSentMessage) {
-                        return _buildSentMessage(context, message.content);
+                  if (filtered.isEmpty) {
+                    return const Center(
+                        child: Text('No messages found.'));
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, index) {
+                      final message = filtered[index];
+                      final isSentMessage = message.senderId == userId;
+                      final isDailyQuestion =
+                          message.senderId == botId;
+
+                      if (isSentMessage) {
+                        return _buildSentMessage(
+                            context, message.content);
                       } else if (isDailyQuestion) {
-                        return _buildDailyQuestionMessage(context, message.content);
+                        return _buildDailyQuestionMessage(
+                            context, message.content);
                       } else {
-                        return _buildReceivedMessage(context, message.content);
+                        return _buildReceivedMessage(
+                            context, message.content);
                       }
                     },
                   );
+                } else if (state is ChatErrorState) {
+                  return Center(child: Text(state.error));
                 }
-                else if (state is ChatErrorState){
-                  return Center(child: Text(state.error),);
-                }
-                return Center(child: Text('No messages found.'),);
+                return const Center(child: Text('No messages found.'));
               },
             ),
           ),
-          _buildMessageInput()
+          _buildMessageInput(),
         ],
-      )
+      ),
     );
   }
 
@@ -123,11 +226,12 @@ class _ChatPageState extends State<ChatPage> {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        margin: EdgeInsets.only(right: 30, top: 5, bottom: 5),
-        padding: EdgeInsets.all(15),
+        margin:
+        const EdgeInsets.only(right: 30, top: 5, bottom: 5),
+        padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
           color: DefaultColors.receiverMessage,
-          borderRadius: BorderRadius.circular(15)
+          borderRadius: BorderRadius.circular(15),
         ),
         child: Text(
           message,
@@ -141,11 +245,12 @@ class _ChatPageState extends State<ChatPage> {
     return Align(
       alignment: Alignment.centerRight,
       child: Container(
-        margin: EdgeInsets.only(right: 30, top: 5, bottom: 5),
-        padding: EdgeInsets.all(15),
+        margin:
+        const EdgeInsets.only(right: 30, top: 5, bottom: 5),
+        padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-            color: DefaultColors.senderMessage,
-            borderRadius: BorderRadius.circular(15)
+          color: DefaultColors.senderMessage,
+          borderRadius: BorderRadius.circular(15),
         ),
         child: Text(
           message,
@@ -159,60 +264,63 @@ class _ChatPageState extends State<ChatPage> {
     return Container(
       decoration: BoxDecoration(
         color: DefaultColors.sentMessageInput,
-        borderRadius: BorderRadius.circular(15)
+        borderRadius: BorderRadius.circular(15),
       ),
-      margin: EdgeInsets.all(25),
-      padding: EdgeInsets.symmetric(horizontal: 15),
+      margin: const EdgeInsets.all(25),
+      padding: const EdgeInsets.symmetric(horizontal: 15),
       child: Row(
         children: [
           GestureDetector(
-            child: Icon(
+            child: const Icon(
               Icons.camera_alt,
               color: Colors.grey,
             ),
-            onTap: () {},
+            onTap: _openCamera,            // NEW
           ),
-          SizedBox(width: 10,),
+          const SizedBox(width: 10),
           Expanded(
-              child: TextField(
-                controller: _messageController,
-                decoration: InputDecoration(
-                  hintText: "Message",
-                  hintStyle: TextStyle(color: Colors.grey),
-                  border: InputBorder.none
-                ),
-                style: TextStyle(color: Colors.white),
-              )
+            child: TextField(
+              controller: _messageController,
+              decoration: const InputDecoration(
+                hintText: "Message",
+                hintStyle: TextStyle(color: Colors.grey),
+                border: InputBorder.none,
+              ),
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
-          SizedBox(width: 10,),
+          const SizedBox(width: 10),
           GestureDetector(
-            child: Icon(
+            child: const Icon(
               Icons.send,
-              color: Colors.grey ,
+              color: Colors.grey,
             ),
             onTap: _sendMessage,
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildDailyQuestionMessage(BuildContext context, String message) {
+  Widget _buildDailyQuestionMessage(
+      BuildContext context, String message) {
     return Align(
       alignment: Alignment.center,
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 15),
-        padding: EdgeInsets.all(15),
+        margin: const EdgeInsets.symmetric(vertical: 15),
+        padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-            color: DefaultColors.dailyQuestionColor,
-            borderRadius: BorderRadius.circular(15)
+          color: DefaultColors.dailyQuestionColor,
+          borderRadius: BorderRadius.circular(15),
         ),
         child: Text(
           '🤖 Daily Question: $message',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+          style: Theme.of(context)
+              .textTheme
+              .bodyMedium
+              ?.copyWith(color: Colors.white70),
         ),
       ),
     );
   }
-
 }
