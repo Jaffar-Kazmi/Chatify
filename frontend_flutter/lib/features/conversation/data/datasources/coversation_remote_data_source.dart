@@ -44,8 +44,5 @@ class ConversationsRemoteDataSource {
     } else {
       throw Exception('Failed to check or create conversation.');
     }
-
   }
-
-
 }

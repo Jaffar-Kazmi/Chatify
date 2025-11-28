@@ -9,6 +9,7 @@ import { Socket } from "dgram";
 import { saveMessage } from "./controllers/messageController";
 import contactRoutes from "./routes/contactRoutes";
 import './cron/cronJob';
+import profileRoutes from "./routes/profileRoutes";
 
 const app = express();
 const server = http.createServer(app);
@@ -25,6 +26,9 @@ app.use('/auth', authRoutes);
 app.use('/conversations', conversationRoutes)
 app.use('/messages', messageRoutes)
 app.use('/contacts', contactRoutes)
+app.use('/profile', profileRoutes);
+app.use('/uploads/profiles', express.static('uploads/profiles'));
+
 
 
 io.on('connection', (socket) => {

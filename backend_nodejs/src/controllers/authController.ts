@@ -41,3 +41,40 @@ export const login = async(req: Request, res: Response): Promise<any> => {
     }
 
 }
+
+export const changePassword = async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!userId || !currentPassword || !newPassword) {
+        return res.status(400).json({ error: 'Missing fields'});
+    }
+
+    try {
+        const result = await pool.query(
+            'SELECT password FROM users where id = $1',
+            [userId]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({error: 'User not found'});
+        }
+
+        const user = result.rows[0];
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(401).json({error: 'Current password is incorrect'});
+        }
+
+        const hashed = await bcrypt.hash(newPassword, 10);
+        await pool.query(
+            'UPDATE users SET password = $1 WhERE id = $2',
+            [hashed, userId]
+        );
+
+        res.json({ message: 'Password changed successfully'});
+    } catch (err) {
+        res.status(500).json({error: 'Failed to change password'});
+    }
+}

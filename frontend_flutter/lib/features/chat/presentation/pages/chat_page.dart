@@ -1,3 +1,4 @@
+import 'package:chat_app/core/widgets/profile_avatar.dart';
 import 'package:chat_app/features/chat/presentation/bloc/chat_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,8 +11,9 @@ import '../bloc/chat_state.dart';
 class ChatPage extends StatefulWidget {
   final String conversationId;
   final String mate;
+  final String? mateProfileImageUrl;
 
-  const ChatPage({super.key, required this.conversationId, required this.mate});
+  const ChatPage({super.key, required this.conversationId, required this.mate, this.mateProfileImageUrl});
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -55,13 +57,14 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    print('mateProfileImageUrl: ${widget.mateProfileImageUrl}');
     return Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
-            CircleAvatar(
+            ProfileAvatar(
+              profileImageUrl: widget.mateProfileImageUrl,
               radius: 25,
-              backgroundImage: NetworkImage('https://placehold.co/400'),
             ),
             SizedBox(width: 10),
             Text(

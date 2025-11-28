@@ -1,11 +1,15 @@
 import 'package:chat_app/core/theme.dart';
+import 'package:chat_app/core/widgets/profile_avatar.dart';
 import 'package:chat_app/features/chat/presentation/pages/chat_page.dart';
 import 'package:chat_app/features/conversation/presentation/bloc/conversations_bloc.dart';
 import 'package:chat_app/features/conversation/presentation/bloc/conversations_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../contact/presentation/pages/contacts_page.dart';
+import '../../../profile/data/datasources/profile_remote_data_sources.dart';
+import '../../../profile/presentation/profile_page.dart';
 import '../bloc/conversations_event.dart';
 
 class ConversationsPage extends StatefulWidget {
@@ -16,11 +20,29 @@ class ConversationsPage extends StatefulWidget {
 }
 
 class _ConversationsPageState extends State<ConversationsPage> {
+  String? _myProfileImageUrl;
+  final _storage = FlutterSecureStorage();
 
   @override
   void initState() {
     super.initState();
     BlocProvider.of<ConversationsBloc>(context).add(FetchConversations());
+    _loadMyProfileImage();
+    _prefetchProfile();
+  }
+
+  Future<void> _loadMyProfileImage() async {
+    final profileImageUrl = await _storage.read(key: 'profileImageUrl');
+    setState(() {
+      _myProfileImageUrl = profileImageUrl;
+    });
+  }
+
+  final _profileDataSource = ProfileRemoteDataSource();
+
+  Future<void> _prefetchProfile() async {
+      final profile = await _profileDataSource.getProfile();
+      await _loadMyProfileImage();
   }
 
   @override
@@ -39,7 +61,19 @@ class _ConversationsPageState extends State<ConversationsPage> {
           IconButton(
               onPressed: () {},
               icon: Icon(Icons.search)
-          )
+          ),
+          IconButton(
+            icon: ProfileAvatar(
+              radius: 25,
+              profileImageUrl: _myProfileImageUrl,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfilePage()),
+              );
+            },
+          ),
         ],
       ),
       body: Column(
@@ -92,13 +126,14 @@ class _ConversationsPageState extends State<ConversationsPage> {
                         return GestureDetector(
                           onTap: () {
                             Navigator.push(context, MaterialPageRoute(builder: (context) => 
-                                ChatPage(conversationId: conversation.id, mate: conversation.participantName)
+                                ChatPage(conversationId: conversation.id, mate: conversation.participantName, mateProfileImageUrl: conversation.profileImageUrl,)
                             ));
                           },
                           child: _buildMessageTile(
                             conversation.participantName,
                             conversation.lastMessage ?? 'No message',
                             conversation.lastMessageTime.toString(),
+                            conversation.profileImageUrl,
                           ),
                         );
                       }
@@ -129,12 +164,11 @@ class _ConversationsPageState extends State<ConversationsPage> {
     );
   }
 
-  Widget _buildMessageTile(String name, String message, String time) {
+  Widget _buildMessageTile(String name, String message, String time, String? profileImageUrl) {
     return ListTile(
       contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      leading: CircleAvatar(
-        radius: 30,
-        backgroundImage: NetworkImage("https://picsum.photos/200"),
+      leading: ProfileAvatar(
+          profileImageUrl: profileImageUrl,
       ),
       title: Text(
         name,

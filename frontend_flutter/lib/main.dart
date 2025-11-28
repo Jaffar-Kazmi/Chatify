@@ -27,6 +27,7 @@ import 'features/contact/presentation/bloc/contacts_bloc.dart';
 import 'features/conversation/data/datasources/coversation_remote_data_source.dart';
 import 'features/conversation/data/repositories/conversations_repository_implementation.dart';
 import 'features/conversation/presentation/bloc/conversations_bloc.dart';
+import 'features/profile/presentation/profile_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -101,6 +102,7 @@ class MyApp extends StatelessWidget {
           '/login': (context) => LoginPage(),
           '/register': (context) => RegisterPage(),
           '/home': (context) => ConversationsPage(),
+          '/profile': (context) => ProfilePage(),
         },
       ),
     );
