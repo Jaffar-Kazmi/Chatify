@@ -19,6 +19,7 @@ import 'features/auth/domain/usecases/register_use_case.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/chat/data/datasources/messages_remote_data_sources.dart';
 import 'features/chat/data/repositories/message_repository_implementation.dart';
+import 'features/chat/domain/usecases/delete_conversation_use_case.dart';
 import 'features/chat/domain/usecases/fetch_daily_question_usecase.dart';
 import 'features/chat/domain/usecases/fetch_messages_use_case.dart';
 import 'features/contact/data/datasources/contacts_remote_data_source.dart';
@@ -80,6 +81,7 @@ class MyApp extends StatelessWidget {
             create: (_) => ChatBloc(
               fetchMessagesUseCase: FetchMessagesUseCase(messagesRepository: messagesRepository),
               fetchDailyQuestionUseCase: FetchDailyQuestionUseCase(messagesRepository: messagesRepository),
+              deleteConversationUseCase: DeleteConversationUseCase(messagesRepository: messagesRepository),
             )
         ),
         BlocProvider(

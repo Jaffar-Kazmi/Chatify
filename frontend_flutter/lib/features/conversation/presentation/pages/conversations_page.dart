@@ -21,7 +21,12 @@ class ConversationsPage extends StatefulWidget {
 
 class _ConversationsPageState extends State<ConversationsPage> {
   String? _myProfileImageUrl;
-  final _storage = FlutterSecureStorage();
+  final _storage = const FlutterSecureStorage();
+  final _profileDataSource = ProfileRemoteDataSource();
+
+  bool _isSearching = false;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -38,18 +43,37 @@ class _ConversationsPageState extends State<ConversationsPage> {
     });
   }
 
-  final _profileDataSource = ProfileRemoteDataSource();
-
   Future<void> _prefetchProfile() async {
-      final profile = await _profileDataSource.getProfile();
-      await _loadMyProfileImage();
+    await _profileDataSource.getProfile();
+    await _loadMyProfileImage();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: _isSearching
+            ? TextField(
+          controller: _searchController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Search by username',
+            border: InputBorder.none,
+          ),
+          style: Theme.of(context).textTheme.bodyLarge,
+          onChanged: (value) {
+            setState(() {
+              _searchQuery = value.toLowerCase();
+            });
+          },
+        )
+            : Text(
           'Messages',
           style: Theme.of(context).textTheme.titleLarge,
         ),
@@ -59,9 +83,17 @@ class _ConversationsPageState extends State<ConversationsPage> {
         toolbarHeight: 70,
         actions: [
           IconButton(
-              onPressed: () {},
-              icon: Icon(Icons.search)
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            iconSize: 30,
+            onPressed: () {
+              setState(() {
+                _isSearching = !_isSearching;
+                _searchQuery = '';
+                _searchController.clear();
+              });
+            },
           ),
+          SizedBox(width: 10,),
           IconButton(
             icon: ProfileAvatar(
               radius: 25,
@@ -70,85 +102,91 @@ class _ConversationsPageState extends State<ConversationsPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ProfilePage()),
+                MaterialPageRoute(builder: (context) => const ProfilePage()),
               );
             },
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: Text(
-              'Recent',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-          SizedBox(height: 10),
+      body: BlocBuilder<ConversationsBloc, ConversationState>(
+        builder: (context, state) {
+          if (state is ConversationLoading) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state is ConversationLoaded) {
+            final all = state.conversations;
 
-          SizedBox(
-            height: 100,
-            child: BlocBuilder<ConversationsBloc, ConversationState>(
-                builder: (context, state) {
-                  if (state is ConversationLoading) {
-                    return Center(child: CircularProgressIndicator());
-                  }
-                  else if (state is ConversationLoaded) {
-                    final recent = state.conversations.take(10).toList();
-                    if (recent.isEmpty) {
-                      return const Center(child: Text('No Recent Contacts'),);
-                    }
-                    return ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      itemCount: recent.length,
+            final filtered = _searchQuery.isEmpty
+                ? all
+                : all
+                .where((c) => c.participantName
+                .toLowerCase()
+                .contains(_searchQuery))
+                .toList();
+
+            final recent = filtered.take(10).toList();
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 15.0),
+                  child: Text(
+                    'Recent',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                SizedBox(
+                  height: 100,
+                  child: recent.isEmpty
+                      ? const Center(child: Text('No recent contacts'))
+                      : ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 8),
+                    itemCount: recent.length,
+                    itemBuilder: (context, index) {
+                      final c = recent[index];
+                      return _buildRecentContact(
+                        context,
+                        c.participantName,
+                        c.profileImageUrl,
+                        c.id,
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: DefaultColors.messageListPage,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(50),
+                        topRight: Radius.circular(50),
+                      ),
+                    ),
+                    child: filtered.isEmpty
+                        ? const Center(
+                      child: Text('No conversations found'),
+                    )
+                        : ListView.builder(
+                      itemCount: filtered.length,
                       itemBuilder: (context, index) {
-                        final conversation = recent[index];
-                        return _buildRecentContact(
-                          context,
-                          conversation.participantName,
-                          conversation.profileImageUrl,
-                          conversation.id
-                        );
-                      },
-                    );
-                  }
-                  else if (state is ConversationError) {
-                    return Center(child: Text(state.error));
-                  }
-                  return const SizedBox.shrink();
-                }
-            ),
-          ),
-
-          SizedBox(height: 10),
-
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: DefaultColors.messageListPage,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(50),
-                    topRight: Radius.circular(50)
-                )
-              ),
-              child: BlocBuilder<ConversationsBloc, ConversationState>(
-                builder: (context, state) {
-                  if (state is ConversationLoading) {
-                    return Center(child: CircularProgressIndicator());
-                  }
-                  else if (state is ConversationLoaded) {
-                    return ListView.builder(
-                      itemCount: state.conversations.length,
-                      itemBuilder : (context, index) {
-                        final conversation = state.conversations[index];
+                        final conversation = filtered[index];
                         return GestureDetector(
                           onTap: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => 
-                                ChatPage(conversationId: conversation.id, mate: conversation.participantName, mateProfileImageUrl: conversation.profileImageUrl,)
-                            ));
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ChatPage(
+                                  conversationId: conversation.id,
+                                  mate: conversation.participantName,
+                                  mateProfileImageUrl:
+                                  conversation.profileImageUrl,
+                                ),
+                              ),
+                            );
                           },
                           child: _buildMessageTile(
                             conversation.participantName,
@@ -157,79 +195,102 @@ class _ConversationsPageState extends State<ConversationsPage> {
                             conversation.profileImageUrl,
                           ),
                         );
-                      }
-                    );
-                  }
-                  else if (state is ConversationError) {
-                    return Center(child: Text(state.error));
-                  }
-                  else {
-                    return Center(child: Text("No conversations found"),);
-                  }
-                },
-              ),
-            ),
-          ),
-        ],
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            );
+          } else if (state is ConversationError) {
+            return Center(child: Text(state.error));
+          } else {
+            return const Center(child: Text('No conversations found'));
+          }
+        },
       ),
       floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ContactsPage()),
-            );
-          },
-          backgroundColor: DefaultColors.buttonColor,
-          child: Icon(Icons.contacts),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ContactsPage()),
+          );
+        },
+        backgroundColor: DefaultColors.buttonColor,
+        child: const Icon(Icons.contacts),
       ),
     );
   }
 
-  Widget _buildMessageTile(String name, String message, String time, String? profileImageUrl) {
+  Widget _buildMessageTile(
+      String name,
+      String message,
+      String time,
+      String? profileImageUrl,
+      ) {
     return ListTile(
-      contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      contentPadding:
+      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       leading: ProfileAvatar(
-          profileImageUrl: profileImageUrl,
+        profileImageUrl: profileImageUrl,
+        radius: 30,
       ),
       title: Text(
         name,
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       subtitle: Text(
         message,
-        style: TextStyle(color: Colors.grey),
+        style: const TextStyle(color: Colors.grey),
         overflow: TextOverflow.ellipsis,
       ),
       trailing: Text(
         time,
-        style: TextStyle(color: Colors.grey),
+        style: const TextStyle(color: Colors.grey),
       ),
-
     );
   }
 
-  Widget _buildRecentContact(BuildContext context, String name, String? profileImageUrl, String conversationId) {
+  Widget _buildRecentContact(
+      BuildContext context,
+      String name,
+      String? profileImageUrl,
+      String conversationId,
+      ) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ChatPage(conversationId: conversationId, mate: name, mateProfileImageUrl: profileImageUrl,),),
+          MaterialPageRoute(
+            builder: (_) => ChatPage(
+              conversationId: conversationId,
+              mate: name,
+              mateProfileImageUrl: profileImageUrl,
+            ),
+          ),
         );
       },
       child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Column(
           children: [
-          ProfileAvatar(
-            radius: 30,
-            profileImageUrl: profileImageUrl,
-          ),
-          SizedBox(height: 5),
-          Text(
-            name,
-            style: Theme.of(context).textTheme.bodyMedium,
-            overflow: TextOverflow.ellipsis,
-          )
+            ProfileAvatar(
+              profileImageUrl: profileImageUrl,
+              radius: 30,
+            ),
+            const SizedBox(height: 5),
+            SizedBox(
+              width: 70,
+              child: Text(
+                name,
+                style: Theme.of(context).textTheme.bodyMedium,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
           ],
         ),
       ),

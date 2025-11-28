@@ -24,3 +24,8 @@ class LoadDailyQuestionEvent extends ChatEvent {
 
   LoadDailyQuestionEvent(this.conversationId);
 }
+
+class DeleteConversationEvent extends ChatEvent {
+  final String conversationId;
+  DeleteConversationEvent(this.conversationId);
+}

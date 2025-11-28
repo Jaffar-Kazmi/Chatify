@@ -65,4 +65,19 @@ class MessageRemoteDataSource {
       throw Exception('Failed to fetch daily question.');
     }
   }
+
+  Future<void> deleteConversation(String conversationId) async {
+    String token = await _storage.read(key: 'token') ?? '';
+    final response = await http.delete(
+      Uri.parse('$baseUrl/conversations/$conversationId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      }
+      );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete conversation');
+    }
+  }
 }

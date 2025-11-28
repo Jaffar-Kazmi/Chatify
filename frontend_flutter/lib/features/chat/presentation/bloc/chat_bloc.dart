@@ -1,4 +1,5 @@
 import 'package:chat_app/features/chat/domain/entities/message_entity.dart';
+import 'package:chat_app/features/chat/domain/repositories/message_repository.dart';
 import 'package:chat_app/features/chat/domain/usecases/fetch_messages_use_case.dart';
 import 'package:chat_app/features/chat/presentation/bloc/chat_event.dart';
 import 'package:chat_app/features/chat/presentation/bloc/chat_state.dart';
@@ -6,20 +7,25 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../../core/socket_service.dart';
+import '../../domain/usecases/delete_conversation_use_case.dart';
 import '../../domain/usecases/fetch_daily_question_usecase.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final FetchMessagesUseCase fetchMessagesUseCase;
   final FetchDailyQuestionUseCase fetchDailyQuestionUseCase;
+  final DeleteConversationUseCase deleteConversationUseCase;
+
+
   final SocketService _socketService = SocketService();
   final List<MessageEntity> _messages = [];
   final _storage = FlutterSecureStorage();
 
-  ChatBloc({required this.fetchMessagesUseCase, required this.fetchDailyQuestionUseCase}) : super(ChatLoadingState()) {
+  ChatBloc({required this.fetchMessagesUseCase, required this.fetchDailyQuestionUseCase, required this.deleteConversationUseCase,}) : super(ChatLoadingState()) {
     on<LoadMessagesEvent>(_onLoadMessages);
     on<SendMessageEvent>(_onSendMessage);
     on<ReceiveMessageEvent>(_onReceiveMessage);
     on<LoadDailyQuestionEvent>(_onLoadDailyQuestion);
+    on<DeleteConversationEvent>(_onDeleteConversation);
   }
 
   Future<void> _onLoadMessages(LoadMessagesEvent event, Emitter<ChatState> emit) async {
@@ -84,4 +90,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
 
   }
+
+  Future<void> _onDeleteConversation(
+      DeleteConversationEvent event,
+      Emitter<ChatState> emit,
+      ) async {
+    try {
+      emit(ChatLoadingState());
+      await deleteConversationUseCase(event.conversationId);
+      emit(ChatLoadedState([]));
+    } catch (e) {
+      emit(ChatErrorState('Failed to delete conversation'));
+    }
+  }
+
 }
