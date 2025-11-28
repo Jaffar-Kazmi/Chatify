@@ -80,25 +80,46 @@ class _ConversationsPageState extends State<ConversationsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0),
+            padding: const EdgeInsets.symmetric(horizontal: 15),
             child: Text(
               'Recent',
-              style: Theme.of(context).textTheme.bodySmall
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
+          SizedBox(height: 10),
 
-          Container(
+          SizedBox(
             height: 100,
-            padding: EdgeInsets.all(5),
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                _buildRecentContact(context, 'Ali'),
-                _buildRecentContact(context, 'Jaffar'),
-                _buildRecentContact(context, 'Raza'),
-                _buildRecentContact(context, 'Kaleem'),
-                _buildRecentContact(context, 'Zain'),
-              ],
+            child: BlocBuilder<ConversationsBloc, ConversationState>(
+                builder: (context, state) {
+                  if (state is ConversationLoading) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  else if (state is ConversationLoaded) {
+                    final recent = state.conversations.take(10).toList();
+                    if (recent.isEmpty) {
+                      return const Center(child: Text('No Recent Contacts'),);
+                    }
+                    return ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      itemCount: recent.length,
+                      itemBuilder: (context, index) {
+                        final conversation = recent[index];
+                        return _buildRecentContact(
+                          context,
+                          conversation.participantName,
+                          conversation.profileImageUrl,
+                          conversation.id
+                        );
+                      },
+                    );
+                  }
+                  else if (state is ConversationError) {
+                    return Center(child: Text(state.error));
+                  }
+                  return const SizedBox.shrink();
+                }
             ),
           ),
 
@@ -187,21 +208,30 @@ class _ConversationsPageState extends State<ConversationsPage> {
     );
   }
 
-  Widget _buildRecentContact(BuildContext context, String name) {
-    return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Column(
-        children: [
-        CircleAvatar(
-          radius: 30,
-          backgroundImage: NetworkImage('https://picsum.photos/200'),
+  Widget _buildRecentContact(BuildContext context, String name, String? profileImageUrl, String conversationId) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ChatPage(conversationId: conversationId, mate: name, mateProfileImageUrl: profileImageUrl,),),
+        );
+      },
+      child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Column(
+          children: [
+          ProfileAvatar(
+            radius: 30,
+            profileImageUrl: profileImageUrl,
+          ),
+          SizedBox(height: 5),
+          Text(
+            name,
+            style: Theme.of(context).textTheme.bodyMedium,
+            overflow: TextOverflow.ellipsis,
+          )
+          ],
         ),
-        SizedBox(height: 5),
-        Text(
-          name,
-          style: Theme.of(context).textTheme.bodyMedium,
-        )
-        ],
       ),
     );
   }

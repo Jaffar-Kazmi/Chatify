@@ -57,7 +57,6 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    print('mateProfileImageUrl: ${widget.mateProfileImageUrl}');
     return Scaffold(
       appBar: AppBar(
         title: Row(
