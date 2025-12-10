@@ -23,9 +23,6 @@ class _LoginPage extends State<LoginPage> {
   void _showInputValues() {
     String email = _emailController.text;
     String password = _passwordController.text;
-
-    print('Email: $email');
-    print('Password: $password');
   }
 
   @override
@@ -56,7 +53,7 @@ class _LoginPage extends State<LoginPage> {
             children: [
               AuthInputField(hint: 'Email', icon: Icons.email, controller: _emailController),
               SizedBox(height: 20,),
-              AuthInputField(hint: 'Password', icon: Icons.password, controller: _passwordController, isPassword: true),
+              AuthInputField(hint: 'Password', icon: Icons.lock, controller: _passwordController, isPassword: true),
               SizedBox(height: 20,),
               BlocConsumer<AuthBloc, AuthState>(
                   builder: (context, state) {

@@ -15,7 +15,7 @@ class AuthInputField extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
           color: DefaultColors.sentMessageInput,
-          borderRadius: BorderRadius.circular(25)
+          borderRadius: BorderRadius.circular(25),
       ),
       padding: EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -31,7 +31,9 @@ class AuthInputField extends StatelessWidget {
             decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(color: Colors.grey),
-                border: InputBorder.none
+                border: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                enabledBorder: InputBorder.none
             ),
             style: TextStyle(color: Colors.white),
           ))

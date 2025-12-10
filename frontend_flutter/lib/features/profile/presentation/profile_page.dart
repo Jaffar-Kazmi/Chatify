@@ -115,7 +115,7 @@ class _ProfilePageState extends State<ProfilePage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: ${e.toString()}'), // Show actual error
+          content: Text('Error: ${e.toString()}'),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 5),
         ),
@@ -147,7 +147,7 @@ class _ProfilePageState extends State<ProfilePage> {
         actions: [
           if (!_isEditing)
             IconButton(
-              icon: const Icon(Icons.edit, color: Colors.cyan,),
+              icon: const Icon(Icons.edit, color: AppColors.primaryLight,),
               onPressed: () => setState(() => _isEditing = true),
             ),
           IconButton(
@@ -192,6 +192,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   prefixIcon: Icon(Icons.person),
                   border: OutlineInputBorder(),
                 ),
+                style: TextStyle(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 20),
 
@@ -204,6 +205,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   prefixIcon: Icon(Icons.email),
                   border: OutlineInputBorder(),
                 ),
+                style: TextStyle(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 30),
 
@@ -219,7 +221,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     });
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: DefaultColors.buttonColor,
+                    backgroundColor: AppColors.surfaceHover,
                     minimumSize: const Size(double.infinity, 50),
                   ),
                   child: Text(
@@ -246,6 +248,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       onPressed: () => setState(() => _showPassword = !_showPassword),
                     ),
                   ),
+                  style: TextStyle(color: AppColors.textPrimary),
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
@@ -261,6 +264,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       onPressed: () => setState(() => _showNewPass = !_showNewPass),
                     ),
                   ),
+                  style: TextStyle(color: AppColors.textPrimary),
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
@@ -276,12 +280,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       onPressed: () => setState(() => _showNewPass = !_showNewPass),
                     ),
                   ),
+                  style: TextStyle(color: AppColors.textPrimary),
                 ),
                 const SizedBox(height: 20),
+
                 ElevatedButton(
                   onPressed: _changingPassword ? null : _onChangePassword,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: DefaultColors.buttonColor,
+                    backgroundColor: AppColors.surfaceHover,
                     minimumSize: const Size(double.infinity, 50),
                   ),
                   child: _changingPassword
@@ -297,6 +303,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ElevatedButton(
                   onPressed: _isLoading ? null : _saveProfile,
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
                     minimumSize: const Size(double.infinity, 50),
                   ),
                   child: _isLoading

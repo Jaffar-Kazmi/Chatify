@@ -3,6 +3,7 @@ import 'package:chat_app/features/contact/presentation/bloc/contacts_state.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/theme.dart';
 import '../../../chat/presentation/pages/chat_page.dart';
 import '../bloc/contacts_event.dart';
 
@@ -29,8 +30,6 @@ class _ContactsPageState extends State<ContactsPage> {
             'Contacts',
           style: Theme.of(context).textTheme.titleLarge,
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
       ),
       body: BlocListener<ContactsBloc, ContactState>(
         listener: (context, state) async {
@@ -120,7 +119,6 @@ class _ContactsPageState extends State<ContactsPage> {
               )
           )
         ],
-
       )
     );
   }

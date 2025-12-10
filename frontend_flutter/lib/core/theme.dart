@@ -12,7 +12,6 @@ class FontSizes {
 }
 
 class AppColors {
-  // Primary Palette - Ocean Blues & Teals
   static const Color primary = Color(0xFF54ACBF);        // Vibrant Teal
   static const Color primaryLight = Color(0xFFA7EBF2);   // Light Cyan
   static const Color primaryDark = Color(0xFF26658C);    // Deep Blue
@@ -102,9 +101,10 @@ class AppTheme {
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        titleSpacing: 0,
         centerTitle: false,
         iconTheme: const IconThemeData(
-          color: AppColors.textPrimary,
+          color: AppColors.primary,
           size: 24,
         ),
         titleTextStyle: GoogleFonts.inter(
@@ -242,7 +242,7 @@ class AppTheme {
 
       // Floating Action Button Theme
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.primaryDark,
         foregroundColor: AppColors.darkest,
         elevation: 4,
       ),
@@ -312,7 +312,6 @@ class AppTheme {
           color: AppColors.textPrimary,
         ),
 
-        // Title styles (backward compatible)
         titleLarge: GoogleFonts.alegreyaSans(
           fontSize: FontSizes.large,
           color: AppColors.textPrimary,

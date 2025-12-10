@@ -81,6 +81,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
           style: Theme.of(context).textTheme.titleLarge,
         ),
         centerTitle: false,
+        titleSpacing: 15,
         backgroundColor: Colors.transparent,
         elevation: 0,
         toolbarHeight: 70,
@@ -240,18 +241,18 @@ class _ConversationsPageState extends State<ConversationsPage> {
       title: Text(
         name,
         style: const TextStyle(
-          color: Color(0xFF1B202D),
+          color: AppColors.darkest,
           fontWeight: FontWeight.bold,
         ),
       ),
       subtitle: Text(
         message,
-        style: const TextStyle(color: Color(0xFF19183B)),
+        style: const TextStyle(color: AppColors.accent),
         overflow: TextOverflow.ellipsis,
       ),
       trailing: Text(
         time,
-        style: const TextStyle(color: Color(0xFF2F5755)),
+        style: const TextStyle(color: AppColors.primaryDark),
       ),
     );
   }
@@ -284,10 +285,10 @@ class _ConversationsPageState extends State<ConversationsPage> {
             ),
             const SizedBox(height: 5),
             SizedBox(
-              width: 70,
+              width: 60,
               child: Text(
                 name,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: TextStyle(color: AppColors.textPrimary),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,

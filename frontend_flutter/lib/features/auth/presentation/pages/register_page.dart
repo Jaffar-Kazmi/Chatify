@@ -59,7 +59,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   controller: _emailController),
               SizedBox(height: 20,),
               AuthInputField(hint: 'Password',
-                  icon: Icons.password,
+                  icon: Icons.lock,
                   controller: _passwordController),
               SizedBox(height: 20,),
               BlocConsumer<AuthBloc, AuthState> (
