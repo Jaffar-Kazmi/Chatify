@@ -15,4 +15,5 @@ router.put('/', verifyToken, updateProfile);
 // POST upload profile picture
 router.post('/picture', verifyToken, upload.single('profilePic'), uploadProfilePic);
 
+
 export default router;

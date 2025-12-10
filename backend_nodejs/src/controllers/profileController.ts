@@ -3,6 +3,9 @@ import pool from '../models/db';
 import path from 'path';
 import fs from 'fs';
 
+const baseUrl = process.env.BASE_URL;
+
+
 export const getProfile = async (req: Request, res: Response) => {
   const userId = req.user!.id;
   
@@ -21,7 +24,7 @@ export const getProfile = async (req: Request, res: Response) => {
     const profileWithUrl = {
       ...user,
       profile_image: user.profile_image 
-        ? `http://localhost:3000/uploads/profiles/${user.profile_image}`
+        ? `${baseUrl}/uploads/profiles/${user.profile_image}`
         : null
     };
     
@@ -77,7 +80,7 @@ export const uploadProfilePic = async (req: Request, res: Response) => {
       [newFilename, userId]
     );
     
-    res.json({ profilePic: `http://10.0.2.2:3000/uploads/profiles/${newFilename}` });
+    res.json({ profilePic: `${baseUrl}/uploads/profiles/${newFilename}` });
   } catch (error) {
     fs.unlinkSync(path.join(__dirname, '../../uploads/profiles/', file.filename));
     res.status(500).json({ error: 'Failed to upload profile picture' });

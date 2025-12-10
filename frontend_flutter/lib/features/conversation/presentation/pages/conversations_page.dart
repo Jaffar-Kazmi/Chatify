@@ -35,12 +35,15 @@ class _ConversationsPageState extends State<ConversationsPage> {
     _loadMyProfileImage();
     _prefetchProfile();
   }
-
   Future<void> _loadMyProfileImage() async {
-    final profileImageUrl = await _storage.read(key: 'profileImageUrl');
-    setState(() {
-      _myProfileImageUrl = profileImageUrl;
-    });
+    try {
+      final profileImageUrl = await _profileDataSource.getProfileImageUrl();
+      setState(() {
+        _myProfileImageUrl = profileImageUrl;
+      });
+    } catch (e) {
+      print('Failed to fetch profile image: $e');
+    }
   }
 
   Future<void> _prefetchProfile() async {

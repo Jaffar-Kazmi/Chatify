@@ -1,17 +1,17 @@
 import 'dart:convert';
 
+import 'package:chat_app/core/constants.dart';
 import 'package:chat_app/features/conversation/data/models/coversation_model.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class ConversationsRemoteDataSource {
-  final String baseUrl = 'http://localhost:3000';
   final _storage = FlutterSecureStorage();
 
   Future<List<ConversationModel>> fetchConversations() async {
    String token = await _storage.read(key: 'token') ?? '';
     final response = await http.get(
-      Uri.parse('$baseUrl/conversations'),
+      Uri.parse('${AppConstants.baseUrl}/conversations'),
       headers: {
         'Authorization': 'Bearer $token',
       }
@@ -30,7 +30,7 @@ class ConversationsRemoteDataSource {
   Future<String> checkOrCreateConversation({required String contactId}) async {
     String token = await _storage.read(key: 'token') ?? '';
     final response = await http.post(
-      Uri.parse('$baseUrl/conversations/check-or-create'),
+      Uri.parse('${AppConstants.baseUrl}/conversations/check-or-create'),
       body: jsonEncode({'contactId': contactId, }),
       headers: {
         'Content-Type': 'application/json',

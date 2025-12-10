@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme.dart';
+import '../../auth/presentation/pages/login_page.dart';
 import '../data/datasources/profile_remote_data_sources.dart';
 import '../data/models/profile_model.dart';
 
@@ -14,7 +16,6 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final _profileDataSource = ProfileRemoteDataSource();
-
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _currentPassController = TextEditingController();
@@ -22,14 +23,14 @@ class _ProfilePageState extends State<ProfilePage> {
   final _confirmPassController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
-  bool _changingPassword = false;
-  bool _showPassword = false;
-  bool _showNewPass = false;
-
-  ProfileModel? _profile;
-  File? _imageFile;
   bool _isEditing = false;
   bool _isLoading = true;
+  bool _showPasswordFields = false;
+  bool _showPassword = false;
+  bool _showNewPass = false;
+  bool _changingPassword = false;
+  File? _imageFile;
+  ProfileModel? _profile;
 
   @override
   void initState() {
@@ -45,7 +46,7 @@ class _ProfilePageState extends State<ProfilePage> {
       _emailController.text = _profile!.email;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load profile')),
+        const SnackBar(content: Text('Failed to load profile')),
       );
     }
     setState(() => _isLoading = false);
@@ -62,13 +63,11 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _saveProfile() async {
     setState(() => _isLoading = true);
     try {
-      // Upload image first if selected
       String? profilePicUrl;
       if (_imageFile != null) {
         profilePicUrl = await _profileDataSource.uploadProfilePic(_imageFile!);
       }
 
-      // Update profile
       final updatedProfile = ProfileModel(
         id: _profile!.id,
         username: _usernameController.text,
@@ -79,201 +78,233 @@ class _ProfilePageState extends State<ProfilePage> {
       await _profileDataSource.updateProfile(updatedProfile);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Profile updated successfully!')),
+        const SnackBar(content: Text('Profile updated successfully!')),
       );
 
-      setState(() => _isEditing = false);
+      setState(() {
+        _isEditing = false;
+        _showPasswordFields = false;
+        _currentPassController.clear();
+        _newPassController.clear();
+        _confirmPassController.clear();
+      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update profile')),
+        const SnackBar(content: Text('Failed to update profile')),
       );
     }
     setState(() => _isLoading = false);
   }
 
   Future<void> _onChangePassword() async {
-    if (!_formKey.currentState!.validate()) return;
-
     setState(() => _changingPassword = true);
     try {
       await _profileDataSource.changePassword(
         _currentPassController.text.trim(),
         _newPassController.text.trim(),
       );
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Password changed successfully')),
       );
+
       _currentPassController.clear();
       _newPassController.clear();
       _confirmPassController.clear();
+      setState(() => _showPasswordFields = false);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(
+          content: Text('Error: ${e.toString()}'), // Show actual error
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 5),
+        ),
       );
     } finally {
       setState(() => _changingPassword = false);
     }
   }
 
+  Future<void> handleLogout(BuildContext context) async {
+    final storage = FlutterSecureStorage();
+    await storage.deleteAll();
+
+    if (!context.mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+          (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile'),
+        title: Text('Profile', style: TextStyle(color: DefaultColors.headerColor)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           if (!_isEditing)
             IconButton(
-              icon: Icon(Icons.edit),
+              icon: const Icon(Icons.edit, color: Colors.cyan,),
               onPressed: () => setState(() => _isEditing = true),
-            )
+            ),
+          IconButton(
+            onPressed: () => handleLogout(context),
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
+          ),
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Profile Picture
-            GestureDetector(
-              onTap: _isEditing ? _pickImage : null,
-              child: CircleAvatar(
-                radius: 60,
-                backgroundImage: _imageFile != null
-                    ? FileImage(_imageFile!)                    // ✅ Local picked image
-                    : (_profile?.profilePic != null && _profile!.profilePic!.startsWith('http'))
-                    ? NetworkImage(_profile!.profilePic!)   // ✅ HTTP URL from backend
-                    : null,                                 // ✅ No image
-                child: (_imageFile == null && (_profile?.profilePic == null || !_profile!.profilePic!.startsWith('http')))
-                    ? Icon(Icons.person, size: 60)             // ✅ Default icon
-                    : null,
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: _isEditing ? _pickImage : null,
+                child: CircleAvatar(
+                  radius: 60,
+                  backgroundImage: _imageFile != null
+                      ? FileImage(_imageFile!)
+                      : (_profile?.profilePic != null &&
+                      _profile!.profilePic!.startsWith('http'))
+                      ? NetworkImage(_profile!.profilePic!)
+                      : null,
+                  child: (_imageFile == null &&
+                      (_profile?.profilePic == null ||
+                          !_profile!.profilePic!.startsWith('http')))
+                      ? const Icon(Icons.person, size: 60)
+                      : null,
+                ),
               ),
-            ),
-            SizedBox(height: 30),
+              const SizedBox(height: 50),
 
-            // Username
-            TextField(
-              controller: _usernameController,
-              enabled: _isEditing,
-              decoration: InputDecoration(
-                labelText: 'Username',
-                prefixIcon: Icon(Icons.person),
-                border: OutlineInputBorder(),
+              // Username
+              TextField(
+                controller: _usernameController,
+                enabled: _isEditing,
+                decoration: const InputDecoration(
+                  labelText: 'Username',
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-            SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            // Email
-            TextField(
-              controller: _emailController,
-              enabled: _isEditing,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                prefixIcon: Icon(Icons.email),
-                border: OutlineInputBorder(),
+              // Email
+              TextField(
+                controller: _emailController,
+                enabled: _isEditing,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email),
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-            SizedBox(height: 20),
+              const SizedBox(height: 30),
 
-            // Password
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (_isEditing)
-                Text(
-              'Change Password',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-                SizedBox(height: 10),
-
-                if (_isEditing)
-                  TextFormField(
-              controller: _currentPassController,
-              obscureText: !_showPassword,
-              decoration: InputDecoration(
-                labelText: 'Current Password',
-                prefixIcon: Icon(Icons.lock),
-                border: OutlineInputBorder(),
-                suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _showPassword = !_showPassword;
-                      });
-                    },
-                    icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off)
-                )
-              ),
-            validator: (v) => (v == null || v.isEmpty) ? 'Please enter your current password' : null,
-            ),
-                SizedBox(height: 10),
-
-                if (_isEditing)
-                  TextFormField(
-              controller: _newPassController,
-              obscureText: !_showNewPass,
-              decoration: InputDecoration(
-                labelText: 'Enter New Password',
-                prefixIcon: Icon(Icons.lock),
-                border: OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(_showNewPass ? Icons.visibility : Icons.visibility_off),
+              // CHANGE PASSWORD BUTTON
+              if (_isEditing)
+                ElevatedButton(
                   onPressed: () {
-                    setState(() => _showNewPass = !_showNewPass);
+                    setState(() {
+                      _showPasswordFields = !_showPasswordFields;
+                      _currentPassController.clear();
+                      _newPassController.clear();
+                      _confirmPassController.clear();
+                    });
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: DefaultColors.buttonColor,
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                  child: Text(
+                    _showPasswordFields
+                        ? 'Cancel Password Change'
+                        : 'Change Password',
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ),
-              ),
-              validator: (v) => (v == null || v.isEmpty) ? 'Please enter your new password' : null,
-            ),
-                SizedBox(height: 10),
 
-                if (_isEditing)
-                  TextFormField(
-              controller: _confirmPassController,
-              obscureText: !_showNewPass,
-              decoration: InputDecoration(
-                labelText: 'Confirm New Password',
-                prefixIcon: Icon(Icons.lock),
-                border: OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(_showNewPass ? Icons.visibility : Icons.visibility_off),
-                  onPressed: () {
-                    setState(() => _showNewPass = !_showNewPass);
-                  },
+              // PASSWORD FIELDS
+              if (_showPasswordFields) ...[
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _currentPassController,
+                  obscureText: !_showPassword,
+                  decoration: InputDecoration(
+                    labelText: 'Current Password',
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _showPassword ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () => setState(() => _showPassword = !_showPassword),
+                    ),
+                  ),
                 ),
-              ),
-              validator: (v) {
-                if (v == null || v.isEmpty) {
-                  return 'Please confirm your new password';
-                } else if (v != _newPassController.text) {
-                  return 'Passwords do not match';
-                }
-                return null;
-              },
-            ),
-                SizedBox(height: 20),
-
-                if (_isEditing)
-                  ElevatedButton(
-              onPressed: _changingPassword ? null : _onChangePassword,
-              child: _changingPassword ? CircularProgressIndicator() : Text('Change Password'),
-            ),
-                SizedBox(height: 40),
-
-                if (_isEditing)
-                  ElevatedButton(
-                onPressed: _isLoading ? null : _saveProfile,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size(double.infinity, 50),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _newPassController,
+                  obscureText: !_showNewPass,
+                  decoration: InputDecoration(
+                    labelText: 'New Password',
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _showNewPass ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () => setState(() => _showNewPass = !_showNewPass),
+                    ),
+                  ),
                 ),
-                child: _isLoading
-                    ? CircularProgressIndicator(color: Colors.white)
-                    : Text('Save Profile'),
-              ),
-              ]
-            ),
-          ],
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _confirmPassController,
+                  obscureText: !_showNewPass,
+                  decoration: InputDecoration(
+                    labelText: 'Confirm New Password',
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _showNewPass ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () => setState(() => _showNewPass = !_showNewPass),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _changingPassword ? null : _onChangePassword,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: DefaultColors.buttonColor,
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                  child: _changingPassword
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Change Password', style: TextStyle(color: DefaultColors.headerColor),),
+                ),
+              ],
+
+              const SizedBox(height: 40),
+
+              // SAVE PROFILE BUTTON
+              if (_isEditing)
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _saveProfile,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Save Profile'),
+                ),
+            ],
+          ),
         ),
       ),
     );

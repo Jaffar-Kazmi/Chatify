@@ -18,6 +18,7 @@ class DefaultColors {
   static const Color messageListPage = Color(0xFF292F3F);
   static const Color buttonColor = Color(0xFF7A8194);
   static const Color dailyQuestionColor = Colors.blueGrey;
+  static const Color headerColor = Color.fromRGBO(255, 242, 242, 1);
 }
 
 class AppTheme {
@@ -25,6 +26,45 @@ class AppTheme {
     return ThemeData(
       primaryColor: Colors.white,
       scaffoldBackgroundColor: Color(0xFF1B202D),
+
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(
+          color: Colors.white,
+        ),
+        titleTextStyle: TextStyle(
+          color: DefaultColors.headerColor,
+          fontSize: 20,
+        ),
+      ),
+
+      inputDecorationTheme: InputDecorationTheme(
+        filled: false,
+        fillColor: DefaultColors.sentMessageInput,
+        labelStyle: TextStyle(
+          color: DefaultColors.greyText,
+          fontSize: FontSizes.standardUp,
+        ),
+        hintStyle: TextStyle(
+          color: DefaultColors.greyText,
+        ),
+        prefixIconColor: DefaultColors.greyText,
+        suffixIconColor: DefaultColors.greyText,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.transparent),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: DefaultColors.buttonColor),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red),
+        ),
+      ),
+
       textTheme: TextTheme(
         titleMedium: GoogleFonts.alegreyaSans(
           fontSize: FontSizes.medium,
