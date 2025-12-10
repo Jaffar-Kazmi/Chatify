@@ -87,7 +87,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
-            iconSize: 30,
+            iconSize: 25,
             onPressed: () {
               setState(() {
                 _isSearching = !_isSearching;
@@ -96,7 +96,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
               });
             },
           ),
-          SizedBox(width: 10,),
+
           IconButton(
             icon: ProfileAvatar(
               radius: 25,
@@ -139,6 +139,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),
+                SizedBox(height: 10,),
                 SizedBox(
                   height: 100,
                   child: recent.isEmpty
@@ -235,23 +236,22 @@ class _ConversationsPageState extends State<ConversationsPage> {
       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       leading: ProfileAvatar(
         profileImageUrl: profileImageUrl,
-        radius: 30,
       ),
       title: Text(
         name,
         style: const TextStyle(
-          color: Colors.white,
+          color: Color(0xFF1B202D),
           fontWeight: FontWeight.bold,
         ),
       ),
       subtitle: Text(
         message,
-        style: const TextStyle(color: Colors.grey),
+        style: const TextStyle(color: Color(0xFF19183B)),
         overflow: TextOverflow.ellipsis,
       ),
       trailing: Text(
         time,
-        style: const TextStyle(color: Colors.grey),
+        style: const TextStyle(color: Color(0xFF2F5755)),
       ),
     );
   }
@@ -281,7 +281,6 @@ class _ConversationsPageState extends State<ConversationsPage> {
           children: [
             ProfileAvatar(
               profileImageUrl: profileImageUrl,
-              radius: 30,
             ),
             const SizedBox(height: 5),
             SizedBox(

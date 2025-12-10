@@ -8,7 +8,7 @@ class ProfileAvatar extends StatelessWidget {
   const ProfileAvatar({
     super.key,
     required this.profileImageUrl,
-    this.radius = 25,
+    this.radius = 27,
   });
 
   @override
