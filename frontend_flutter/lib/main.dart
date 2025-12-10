@@ -12,6 +12,7 @@ import 'package:chat_app/features/auth/presentation/pages/register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app/core/theme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'core/socket_service.dart';
 import 'features/auth/domain/usecases/login_use_case.dart';

@@ -1,6 +1,7 @@
-import { Request , Response } from "express";
+import { Request, Response } from "express";
 import pool from "../models/db";
-import { AI_BOT_ID } from "../config";
+
+const AI_BOT_ID = 'your-ai-bot-id';
 
 export const fetchAllConversationsByUserId = async (req: Request, res: Response) => {
     let userId = null;
@@ -8,7 +9,9 @@ export const fetchAllConversationsByUserId = async (req: Request, res: Response)
         userId = req.user.id;
     }
 
-    try{
+    console.log('Fetch conversations for user:', userId);
+
+    try {
         const result = await pool.query(
             `
             SELECT 
@@ -18,18 +21,8 @@ export const fetchAllConversationsByUserId = async (req: Request, res: Response)
                     ELSE u1.username
                 END AS participant_name,
                 CASE
-                    WHEN u1.id = $1 THEN 
-                      CASE 
-                        WHEN u2.profile_image IS NOT NULL 
-                        THEN 'http://localhost:3000/uploads/profiles/' || u2.profile_image 
-                        ELSE NULL 
-                      END
-                    ELSE 
-                      CASE 
-                        WHEN u1.profile_image IS NOT NULL 
-                        THEN 'http://localhost:3000/uploads/profiles/' || u1.profile_image 
-                        ELSE NULL 
-                      END
+                    WHEN u1.id = $1 THEN u2.profile_image
+                    ELSE u1.profile_image
                 END AS participant_profile_image,
                 m.content AS last_message,
                 m.created_at AS last_message_time
@@ -40,18 +33,28 @@ export const fetchAllConversationsByUserId = async (req: Request, res: Response)
                 SELECT content, created_at
                 FROM messages
                 WHERE conversation_id = c.id
-                ORDER by created_at desc
+                ORDER BY created_at DESC
                 LIMIT 1            
             ) m ON true
-            WHERE c.participant_one = $1 or c.participant_two = $1
-            ORDER by m.created_at DESC;            
+            WHERE c.participant_one = $1 OR c.participant_two = $1
+            ORDER BY m.created_at DESC;            
             `,
-             [userId]            
+            [userId]            
         );
 
-        res.json(result.rows);
+        console.log('Found conversations:', result.rows.length);
+
+        const conversations = result.rows.map(row => ({
+            ...row,
+            participant_profile_image: row.participant_profile_image 
+                ? `${process.env.BASE_URL}/uploads/profiles/${row.participant_profile_image}`
+                : null
+        }));
+
+        res.json(conversations);
     } catch (e) {
-        res.status(500).json({error: 'Failed to fetch conversation'});
+        console.error('Fetch conversations error:', e);
+        res.status(500).json({ error: 'Failed to fetch conversation' });
     }
 }
 
@@ -61,7 +64,9 @@ export const checkOrCreateConvesation = async (req: Request, res: Response): Pro
         userId = req.user.id;
     }
 
-    const{contactId} = req.body
+    const { contactId } = req.body;
+
+    console.log('Check/create conversation:', { userId, contactId });
 
     try {
         const existingConversation = await pool.query(
@@ -74,8 +79,9 @@ export const checkOrCreateConvesation = async (req: Request, res: Response): Pro
             [userId, contactId]
         );
 
-        if(existingConversation.rowCount != null && existingConversation.rowCount! > 0) {
-            return res.json({conversationId: existingConversation.rows[0].id});
+        if (existingConversation.rowCount != null && existingConversation.rowCount! > 0) {
+            console.log('Existing conversation found:', existingConversation.rows[0].id);
+            return res.json({ conversationId: existingConversation.rows[0].id });
         }
 
         const newConversation = await pool.query(
@@ -87,17 +93,20 @@ export const checkOrCreateConvesation = async (req: Request, res: Response): Pro
             [userId, contactId]
         );
 
-        res.json({conversationId: new newConversation.rows[0].id})
+        console.log('New conversation created:', newConversation.rows[0].id);
+        res.json({ conversationId: newConversation.rows[0].id });
     } catch (error) {
-        res.status(500).json({error: 'Failed to check or create conversation'})
+        console.error('Check/create conversation error:', error);
+        res.status(500).json({ error: 'Failed to check or create conversation' });
     }
 }
 
-export const getDailyQuestion = async (req: Request, res: Response): Promise<any>  => {
+export const getDailyQuestion = async (req: Request, res: Response): Promise<any> => {
     const conversationId = req.params.id;
 
-    try{
+    console.log('Get daily question for conversation:', conversationId);
 
+    try {
         const result = await pool.query(
             `
             SELECT content FROM messages
@@ -106,41 +115,40 @@ export const getDailyQuestion = async (req: Request, res: Response): Promise<any
             LIMIT 1       
             `,
             [conversationId, AI_BOT_ID]
-        )
+        );
 
         if (result.rowCount === 0) {
-            return res.status(404).json({error: 'No daily question found'});
+            console.log('No daily question found');
+            return res.status(404).json({ error: 'No daily question found' });
         }
 
-        res.json({question: result.rows[0].content});
-
+        res.json({ question: result.rows[0].content });
     } catch (error) {
-        console.error('Error fetching daily question: ', error);
-        res.status(500).json({error: 'Failed to fetch daily question'});
+        console.error('Error fetching daily question:', error);
+        res.status(500).json({ error: 'Failed to fetch daily question' });
     }
 }
 
 export const deleteConversation = async (req: Request, res: Response) => {
-  const { id } = req.params; // conversationId
+    const { id } = req.params;
 
-  try {
-    // delete messages first (FK constraint)
-    await pool.query(
-      "DELETE FROM messages WHERE conversation_id = $1",
-      [id]
-    );
+    console.log('Delete conversation:', id);
 
-    // delete conversation
-    await pool.query(
-      "DELETE FROM conversations WHERE id = $1",
-      [id]
-    );
+    try {
+        await pool.query(
+            "DELETE FROM messages WHERE conversation_id = $1",
+            [id]
+        );
 
-    return res.status(200).json({ message: "Conversation deleted" });
-  } catch (e) {
-    console.error("Delete conversation error:", e);
-    return res
-      .status(500)
-      .json({ error: "Failed to delete conversation" });
-  }
+        await pool.query(
+            "DELETE FROM conversations WHERE id = $1",
+            [id]
+        );
+
+        console.log('Conversation deleted:', id);
+        return res.status(200).json({ message: "Conversation deleted" });
+    } catch (e) {
+        console.error("Delete conversation error:", e);
+        return res.status(500).json({ error: "Failed to delete conversation" });
+    }
 };

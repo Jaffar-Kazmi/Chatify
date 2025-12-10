@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:chat_app/core/constants.dart';
 import 'package:chat_app/features/chat/data/models/daily_question_model.dart';
 import 'package:chat_app/features/chat/domain/entities/daily_question_entity.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,13 +11,12 @@ import '../../domain/entities/message_entity.dart';
 import '../models/message_model.dart';
 
 class MessageRemoteDataSource {
-  final String baseUrl = 'http://localhost:3000';
   final _storage = FlutterSecureStorage();
 
   Future<List<MessageEntity>> fetchMessages(String conversationId) async {
     String token = await _storage.read(key: 'token') ?? '';
     final response = await http.get(
-        Uri.parse('$baseUrl/messages/$conversationId'),
+        Uri.parse('${AppConstants.baseUrl}/messages/$conversationId'),
         headers: {
           'Authorization': 'Bearer $token',
         }
@@ -52,7 +52,7 @@ class MessageRemoteDataSource {
   Future<DailyQuestionEntity> fetchDailyQuestion(String conversationId) async {
     String token = await _storage.read(key: 'token') ?? '';
     final response = await http.get(
-        Uri.parse('$baseUrl/conversations/$conversationId/daily-question'),
+        Uri.parse('${AppConstants.baseUrl}/conversations/$conversationId/daily-question'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -69,7 +69,7 @@ class MessageRemoteDataSource {
   Future<void> deleteConversation(String conversationId) async {
     String token = await _storage.read(key: 'token') ?? '';
     final response = await http.delete(
-      Uri.parse('$baseUrl/conversations/$conversationId'),
+      Uri.parse('${AppConstants.baseUrl}/conversations/$conversationId'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',

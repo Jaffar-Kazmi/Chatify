@@ -1,3 +1,4 @@
+import 'package:chat_app/core/constants.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -18,7 +19,7 @@ class SocketService {
   Future<void> initSocket() async {
     String token = await _storage.read(key: 'token') ?? '';
     _socket = IO.io(
-      'http://localhost:3000',
+      AppConstants.baseUrl,
       IO.OptionBuilder()
           .setTransports(['websocket'])
           .disableAutoConnect()

@@ -1,18 +1,18 @@
 import 'dart:convert';
 
+import 'package:chat_app/core/constants.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import '../model/contacts_model.dart';
 
 class ContactsRemoteDataSource {
-  final String baseUrl = 'http://localhost:3000';
   final _storage = FlutterSecureStorage();
 
   Future<List<ContactModel>> fetchContacts() async {
     String token = await _storage.read(key: 'token') ?? '';
     final response = await http.get(
-        Uri.parse('$baseUrl/contacts'),
+        Uri.parse('${AppConstants.baseUrl}/contacts'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token'
@@ -34,7 +34,7 @@ class ContactsRemoteDataSource {
   Future<void> addContact({required String email}) async {
     String token = await _storage.read(key: 'token') ?? '';
     final response = await http.post(
-        Uri.parse('$baseUrl/contacts'),
+        Uri.parse('${AppConstants.baseUrl}/contacts'),
         body: jsonEncode({'contactEmail': email}),
         headers: {
           'Content-Type': 'application/json',
