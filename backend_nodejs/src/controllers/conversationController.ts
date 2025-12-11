@@ -14,39 +14,42 @@ export const fetchAllConversationsByUserId = async (req: Request, res: Response)
     try {
         const result = await pool.query(
             `
-            SELECT 
-                c.id AS conversation_id,
-                CASE 
-                    WHEN u1.id = $1 THEN u2.username
-                    ELSE u1.username
-                END AS participant_name,
-                CASE
-                    WHEN u1.id = $1 THEN u2.profile_image
-                    ELSE u1.profile_image
-                END AS participant_profile_image,
-                m.content AS last_message,
-                m.created_at AS last_message_time
+            SELECT
+            c.id AS conversation_id,
+            CASE WHEN u1.id = $1 THEN u2.username ELSE u1.username END AS participant_name,
+            CASE WHEN u1.id = $1 THEN u2.profile_image ELSE u1.profile_image END AS participant_profile_image,
+            m.content AS last_message,
+            m.created_at AS last_message_time,
+            (
+            SELECT COUNT(*)
+            FROM messages mm
+            LEFT JOIN message_reads mr
+            ON mr.conversation_id = c.id AND mr.user_id = $1
+            WHERE mm.conversation_id = c.id
+            AND mm.sender_id <> $1
+            AND (mr.last_read_at IS NULL OR mm.created_at > mr.last_read_at)
+            ) AS unread_count
             FROM conversations c
             JOIN users u1 ON u1.id = c.participant_one
             JOIN users u2 ON u2.id = c.participant_two
             LEFT JOIN LATERAL (
-                SELECT content, created_at
-                FROM messages
-                WHERE conversation_id = c.id
-                ORDER BY created_at DESC
-                LIMIT 1            
+            SELECT content, created_at
+            FROM messages
+            WHERE conversation_id = c.id
+            ORDER BY created_at DESC
+            LIMIT 1
             ) m ON true
             WHERE c.participant_one = $1 OR c.participant_two = $1
-            ORDER BY m.created_at DESC;            
+            ORDER BY m.created_at DESC NULLS LAST;           
             `,
-            [userId]            
+            [userId]
         );
 
         console.log('Found conversations:', result.rows.length);
 
         const conversations = result.rows.map(row => ({
             ...row,
-            participant_profile_image: row.participant_profile_image 
+            participant_profile_image: row.participant_profile_image
                 ? `${process.env.BASE_URL}/uploads/profiles/${row.participant_profile_image}`
                 : null
         }));
@@ -150,5 +153,41 @@ export const deleteConversation = async (req: Request, res: Response) => {
     } catch (e) {
         console.error("Delete conversation error:", e);
         return res.status(500).json({ error: "Failed to delete conversation" });
+    }
+};
+
+export const markConversationRead = async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const conversationId = req.params.id;
+
+    if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const latest = await pool.query(
+            `
+            SELECT id, created_at FROM messages WHERE conversation_id = $1 ORDER BY created_at DESC LIMIT 1`,
+            [conversationId]
+        );
+        const latestMessageId = latest.rowCount ? latest.rows[0].id : null;
+        
+        await pool.query(
+            `
+            INSERT INTO message_reads (user_id, conversation_id, last_read_at, last_read_message_id)
+            VALUES ($1, $2, now(), $3)
+            ON CONFLICT (user_id, conversation_id)
+            DO UPDATE SET
+              last_read_at = EXCLUDED.last_read_at,
+              last_read_message_id = EXCLUDED.last_read_message_id
+            `,
+            [userId, conversationId, latestMessageId]
+        );
+
+        return res.status(200).json({ ok: true });
+
+    } catch (e) {
+        console.error('markConversationRead error:', e);
+        return res.status(500).json({ error: 'Failed to mark conversation as read' });
     }
 };

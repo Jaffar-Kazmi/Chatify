@@ -5,7 +5,7 @@ import cors from 'cors';
 import path from 'path';
 import http from 'http';
 import { Server } from 'socket.io';
-import pool from './models/db'; // Import your database pool
+import pool from './models/db'; 
 
 const app = express();
 const server = http.createServer(app);
@@ -63,7 +63,6 @@ io.on('connection', (socket) => {
     }
 
     try {
-      // Save message to database
       const result = await pool.query(
         `
         INSERT INTO messages (conversation_id, sender_id, content)
@@ -76,7 +75,6 @@ io.on('connection', (socket) => {
       const savedMessage = result.rows[0];
       console.log('Message saved to database:', savedMessage);
 
-      // Broadcast the COMPLETE message (with id and created_at from DB)
       io.to(conversationId).emit('newMessage', {
         id: savedMessage.id,
         conversation_id: savedMessage.conversation_id,
