@@ -21,21 +21,30 @@ export const fetchAllMessagessByConversationId = async (req: Request, res: Respo
     }
 }
 
-export const saveMessage = async (conversation_id: string, sender_id: string, content: string) => {
-    try {
-        const result = await pool.query(
-            `
-            INSERT INTO messages (conversation_id, sender_id, content)
-            VALUES ($1, $2, $3)
-            RETURNING *;
-            `,
-            [conversation_id, sender_id, content]
-        );
+export const createMessage = async (req: Request, res: Response) => {
+  const { conversationId, content } = req.body;
+  const user = (req as any).user; // assuming verifyToken sets req.user
 
-        return result.rows[0];
-    } catch (err) {
-        console.error('Error saving messade: ', err);
-        throw new Error('Failed to save to message');
-    }
+  if (!conversationId || !content) {
+    return res.status(400).json({ error: 'conversationId and content are required' });
+  }
 
-}
+  try {
+    const result = await pool.query(
+      `
+      INSERT INTO messages (conversation_id, sender_id, content)
+      VALUES ($1, $2, $3)
+      RETURNING id, content, sender_id, conversation_id, created_at;
+      `,
+      [conversationId, user.id, content]
+    );
+
+    const message = result.rows[0];
+    console.log('createMessage: inserted', message);
+
+    return res.status(201).json(message);
+  } catch (err) {
+    console.error('Error saving message:', err);
+    return res.status(500).json({ error: 'Failed to save message' });
+  }
+};

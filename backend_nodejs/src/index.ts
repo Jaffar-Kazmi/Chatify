@@ -1,11 +1,11 @@
 import dotenv from 'dotenv';
 dotenv.config();
-
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import http from 'http';
 import { Server } from 'socket.io';
+import pool from './models/db'; // Import your database pool
 
 const app = express();
 const server = http.createServer(app);
@@ -42,7 +42,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Socket.IO
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
@@ -51,8 +50,52 @@ io.on('connection', (socket) => {
     console.log(`User ${socket.id} joined conversation ${conversationId}`);
   });
 
-  socket.on('sendMessage', (data) => {
-    io.to(data.conversationId).emit('newMessage', data);
+  socket.on('sendMessage', async (data) => {
+    console.log('Received sendMessage:', data);
+    
+    const { conversationId, senderId, content } = data;
+
+    // Validate required fields
+    if (!conversationId || !senderId || !content) {
+      console.error('Missing required fields in sendMessage');
+      socket.emit('error', { message: 'Missing required fields' });
+      return;
+    }
+
+    try {
+      // Save message to database
+      const result = await pool.query(
+        `
+        INSERT INTO messages (conversation_id, sender_id, content)
+        VALUES ($1, $2, $3)
+        RETURNING id, content, sender_id, conversation_id, created_at;
+        `,
+        [conversationId, senderId, content]
+      );
+
+      const savedMessage = result.rows[0];
+      console.log('Message saved to database:', savedMessage);
+
+      // Broadcast the COMPLETE message (with id and created_at from DB)
+      io.to(conversationId).emit('newMessage', {
+        id: savedMessage.id,
+        conversation_id: savedMessage.conversation_id,
+        sender_id: savedMessage.sender_id,
+        content: savedMessage.content,
+        created_at: savedMessage.created_at
+      });
+
+      console.log(`Message broadcasted to conversation ${conversationId}`);
+
+    } catch (error) {
+      console.error('Error saving message to database:', error);
+      socket.emit('error', { message: 'Failed to save message' });
+    }
+  });
+
+  socket.on('leaveConversation', (conversationId) => {
+    socket.leave(conversationId);
+    console.log(`User ${socket.id} left conversation ${conversationId}`);
   });
 
   socket.on('disconnect', () => {
@@ -64,8 +107,7 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 
 server.listen(PORT, HOST, () => {
-  console.log(`🚀 Server: http://${HOST}:${PORT}`);
-  console.log(`🌐 BASE_URL: ${process.env.BASE_URL}`);
+  console.log(`Server: http://${HOST}:${PORT}`);
 });
 
 export { io };
