@@ -7,15 +7,25 @@ class ConversationModel extends ConversationEntity {
     String? profileImageUrl,
     required lastMessage,
     required lastMessageTime,
+    required unreadCount,
   }): super (
     id: id,
     participantName: participantName,
       profileImageUrl: profileImageUrl,
     lastMessage: lastMessage,
-    lastMessageTime: lastMessageTime
+    lastMessageTime: lastMessageTime,
+    unreadCount: unreadCount,
   );
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
+    int unread = 0;
+    final rawUnread = json['unread_count'];
+    if (rawUnread is int) {
+      unread = rawUnread;
+    } else if (rawUnread is String) {
+      unread = int.tryParse(rawUnread) ?? 0;
+    }
+
     return ConversationModel(
       id: json['conversation_id'],
       participantName: json['participant_name'],
@@ -24,6 +34,7 @@ class ConversationModel extends ConversationEntity {
       lastMessageTime: json['last_message_time'] != null
           ? DateTime.parse(json['last_message_time'])
           : null,
+      unreadCount: unread,
     );
   }
 }

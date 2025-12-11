@@ -4,4 +4,7 @@ abstract class ConversationRepository {
   Future<List<ConversationEntity>> fetchConversations();
 
   Future<String> checkOrCreateConversation({required String contactId});
+
+  Future<void> markConversationAsRead(String conversationId);
+
 }

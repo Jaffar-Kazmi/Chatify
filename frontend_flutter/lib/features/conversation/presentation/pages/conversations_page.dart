@@ -36,6 +36,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
     _loadMyProfileImage();
     _prefetchProfile();
   }
+
   Future<void> _loadMyProfileImage() async {
     try {
       final profileImageUrl = await _profileDataSource.getProfileImageUrl();
@@ -222,13 +223,16 @@ class _ConversationsPageState extends State<ConversationsPage> {
                                   conversation.profileImageUrl,
                                 ),
                               ),
-                            );
+                            ).then((_) {
+                              context.read<ConversationsBloc>().add(FetchConversations());
+                            });
                           },
                           child: _buildMessageTile(
                             conversation.participantName,
                             conversation.lastMessage ?? 'No message',
                             conversation.lastMessageTime.toString(),
                             conversation.profileImageUrl,
+                            conversation.unreadCount,
                           ),
                         );
                       },
@@ -262,12 +266,43 @@ class _ConversationsPageState extends State<ConversationsPage> {
       String message,
       String time,
       String? profileImageUrl,
+      int unreadCount,
       ) {
     return ListTile(
       contentPadding:
       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      leading: ProfileAvatar(
-        profileImageUrl: profileImageUrl,
+      leading: Stack(
+        children: [
+          ProfileAvatar(
+            profileImageUrl: profileImageUrl,
+          ),
+          if (unreadCount > 0)
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                width: 20,
+                height: 20,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(
+                  minHeight: 20,
+                  minWidth: 20,
+                ),
+                child: Text(
+                  unreadCount > 99 ? '99+' : unreadCount.toString(),
+                  style: const TextStyle(
+                    color: AppColors.primaryLight,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
       title: Text(
         name,

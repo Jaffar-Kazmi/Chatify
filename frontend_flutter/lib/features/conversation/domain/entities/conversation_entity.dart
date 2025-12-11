@@ -4,6 +4,7 @@ class ConversationEntity {
   final String? profileImageUrl;
   final String? lastMessage;
   final DateTime? lastMessageTime;
+  final int unreadCount;
 
   ConversationEntity({
     required this.id,
@@ -11,5 +12,6 @@ class ConversationEntity {
     this.profileImageUrl,
     required this.lastMessage,
     required this.lastMessageTime,
+    required this.unreadCount,
   });
 }

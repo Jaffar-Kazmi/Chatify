@@ -7,6 +7,7 @@ import 'package:chat_app/features/contact/domain/usecases/add_contact_usecase.da
 import 'package:chat_app/features/contact/domain/usecases/fetch_contacts_usecase.dart';
 import 'package:chat_app/features/conversation/domain/usecases/check_or_create_conversation_use_case.dart';
 import 'package:chat_app/features/conversation/domain/usecases/fetch_conversations_use_case.dart';
+import 'package:chat_app/features/conversation/domain/usecases/mark_conversation_as_read_use_case.dart';
 import 'package:chat_app/features/conversation/presentation/pages/conversations_page.dart';
 import 'package:chat_app/features/auth/presentation/pages/register_page.dart';
 import 'package:flutter/material.dart';
@@ -83,6 +84,7 @@ class MyApp extends StatelessWidget {
               fetchMessagesUseCase: FetchMessagesUseCase(messagesRepository: messagesRepository),
               fetchDailyQuestionUseCase: FetchDailyQuestionUseCase(messagesRepository: messagesRepository),
               deleteConversationUseCase: DeleteConversationUseCase(messagesRepository: messagesRepository),
+              markConversationAsReadUseCase: MarkConversationAsReadUseCase(conversationsRepository),
             )
         ),
         BlocProvider(

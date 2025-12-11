@@ -45,4 +45,21 @@ class ConversationsRemoteDataSource {
       throw Exception('Failed to check or create conversation.');
     }
   }
+
+  Future<void> markConversationAsRead(String conversationId) async {
+    final token = await _storage.read(key: 'token') ?? '';
+    final response = await http.put(
+      Uri.parse('${AppConstants.baseUrl}/conversations/$conversationId/read'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    print('Mark read status: ${response.statusCode}, body: ${response.body}');
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to mark as read: ${response.body}');
+    }
+  }
 }

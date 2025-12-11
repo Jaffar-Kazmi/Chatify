@@ -19,4 +19,9 @@ class ConversationRepositoryImplementation implements ConversationRepository {
   Future<String> checkOrCreateConversation({required String contactId}) async {
     return await conversationsRemoteDataSource.checkOrCreateConversation(contactId: contactId);
   }
+
+  @override
+  Future<void> markConversationAsRead(String conversationId) async {
+    return await conversationsRemoteDataSource.markConversationAsRead(conversationId);
+  }
 }
