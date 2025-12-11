@@ -6,6 +6,7 @@ import 'package:chat_app/features/conversation/presentation/bloc/conversations_s
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:intl/intl.dart';
 
 import '../../../contact/presentation/pages/contacts_page.dart';
 import '../../../profile/data/datasources/profile_remote_data_sources.dart';
@@ -49,6 +50,36 @@ class _ConversationsPageState extends State<ConversationsPage> {
   Future<void> _prefetchProfile() async {
     await _profileDataSource.getProfile();
     await _loadMyProfileImage();
+  }
+
+  String formatMessageTime(String? isoString) {
+    if (isoString == null || isoString.isEmpty) {
+      return ''; // fallback if null
+    }
+
+    try {
+      final dateTime = DateTime.parse(isoString).toLocal();
+      final now = DateTime.now();
+
+      final isToday = dateTime.year == now.year &&
+          dateTime.month == now.month &&
+          dateTime.day == now.day;
+
+      final yesterday = now.subtract(const Duration(days: 1));
+      final isYesterday = dateTime.year == yesterday.year &&
+          dateTime.month == yesterday.month &&
+          dateTime.day == yesterday.day;
+
+      if (isToday) {
+        return DateFormat('h:mm a').format(dateTime); // e.g., 10:42 AM
+      } else if (isYesterday) {
+        return 'Yesterday';
+      } else {
+        return DateFormat('MMM d').format(dateTime); // e.g., Nov 29
+      }
+    } catch (e) {
+      return ''; // fallback if parsing fails
+    }
   }
 
   @override
@@ -251,7 +282,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
         overflow: TextOverflow.ellipsis,
       ),
       trailing: Text(
-        time,
+        formatMessageTime(time),
         style: const TextStyle(color: AppColors.primaryDark),
       ),
     );

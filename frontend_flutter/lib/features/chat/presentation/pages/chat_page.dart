@@ -136,7 +136,7 @@ class _ChatPageState extends State<ChatPage> {
           children: [
             ProfileAvatar(
               profileImageUrl: widget.mateProfileImageUrl,
-              radius: 25,
+              radius: 22,
             ),
             const SizedBox(width: 10),
             Text(
@@ -159,7 +159,7 @@ class _ChatPageState extends State<ChatPage> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.delete),
+            icon: const Icon(Icons.delete, color: Colors.redAccent,),
             onPressed: _onDeleteConversation,
           ),
         ],
@@ -189,7 +189,7 @@ class _ChatPageState extends State<ChatPage> {
                   }
 
                   return ListView.builder(
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.only(top: 16, bottom: 16),
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
                       final message = filtered[index];
@@ -227,15 +227,17 @@ class _ChatPageState extends State<ChatPage> {
       alignment: Alignment.centerLeft,
       child: Container(
         margin:
-        const EdgeInsets.only(right: 30, top: 5, bottom: 5),
-        padding: const EdgeInsets.all(15),
+        const EdgeInsets.only(left: 20, top: 5, bottom: 5),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: DefaultColors.receiverMessage,
-          borderRadius: BorderRadius.circular(15),
+          color: AppColors.primaryLight,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15), bottomRight: Radius.circular(15), bottomLeft: Radius.circular(3)),
         ),
         child: Text(
           message,
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AppColors.primaryDark
+          ),
         ),
       ),
     );
@@ -246,11 +248,11 @@ class _ChatPageState extends State<ChatPage> {
       alignment: Alignment.centerRight,
       child: Container(
         margin:
-        const EdgeInsets.only(right: 30, top: 5, bottom: 5),
-        padding: const EdgeInsets.all(15),
+        const EdgeInsets.only(right: 20, top: 5, bottom: 5),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: DefaultColors.senderMessage,
-          borderRadius: BorderRadius.circular(15),
+          color: AppColors.primaryDark,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15), bottomLeft: Radius.circular(15), bottomRight: Radius.circular(3)),
         ),
         child: Text(
           message,
@@ -273,18 +275,19 @@ class _ChatPageState extends State<ChatPage> {
           GestureDetector(
             child: const Icon(
               Icons.camera_alt,
-              color: Colors.grey,
+              color: AppColors.primaryLight,
             ),
-            onTap: _openCamera,            // NEW
+            onTap: _openCamera,
           ),
-          const SizedBox(width: 10),
           Expanded(
             child: TextField(
               controller: _messageController,
               decoration: const InputDecoration(
-                hintText: "Message",
+                hintText: "Enter message",
                 hintStyle: TextStyle(color: Colors.grey),
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
               ),
               style: const TextStyle(color: Colors.white),
             ),
@@ -293,7 +296,7 @@ class _ChatPageState extends State<ChatPage> {
           GestureDetector(
             child: const Icon(
               Icons.send,
-              color: Colors.grey,
+              color: AppColors.primaryLight,
             ),
             onTap: _sendMessage,
           ),

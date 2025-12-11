@@ -24,7 +24,6 @@ class AuthInputField extends StatelessWidget {
             icon,
             color: Colors.grey,
           ),
-          SizedBox(width: 10,),
           Expanded(child: TextField(
             controller: controller,
             obscureText: isPassword,
