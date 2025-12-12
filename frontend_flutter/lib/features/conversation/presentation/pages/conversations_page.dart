@@ -135,11 +135,12 @@ class _ConversationsPageState extends State<ConversationsPage> {
               radius: 25,
               profileImageUrl: _myProfileImageUrl,
             ),
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const ProfilePage()),
               );
+              _loadMyProfileImage();
             },
           ),
         ],
@@ -195,47 +196,53 @@ class _ConversationsPageState extends State<ConversationsPage> {
                 ),
                 const SizedBox(height: 10),
                 Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: DefaultColors.messageListPage,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(50),
-                        topRight: Radius.circular(50),
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      context.read<ConversationsBloc>().add(FetchConversations());
+                      await Future.delayed(const Duration(milliseconds: 300));
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(50),
+                          topRight: Radius.circular(50),
+                        ),
                       ),
-                    ),
-                    child: filtered.isEmpty
-                        ? const Center(
-                      child: Text('No conversations found'),
-                    )
-                        : ListView.builder(
-                      itemCount: filtered.length,
-                      itemBuilder: (context, index) {
-                        final conversation = filtered[index];
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ChatPage(
-                                  conversationId: conversation.id,
-                                  mate: conversation.participantName,
-                                  mateProfileImageUrl:
-                                  conversation.profileImageUrl,
+                      child: filtered.isEmpty
+                          ? const Center(
+                        child: Text('No conversations found'),
+                      )
+                          : ListView.builder(
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final conversation = filtered[index];
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChatPage(
+                                    conversationId: conversation.id,
+                                    mate: conversation.participantName,
+                                    mateProfileImageUrl:
+                                    conversation.profileImageUrl,
+                                  ),
                                 ),
-                              ),
-                            ).then((_) {
-                              context.read<ConversationsBloc>().add(FetchConversations());
-                            });
-                          },
-                          child: _buildMessageTile(
-                            conversation.participantName,
-                            conversation.lastMessage ?? 'No message',
-                            conversation.lastMessageTime.toString(),
-                            conversation.profileImageUrl,
-                            conversation.unreadCount,
-                          ),
-                        );
-                      },
+                              ).then((_) {
+                                context.read<ConversationsBloc>().add(FetchConversations());
+                              });
+                            },
+                            child: _buildMessageTile(
+                              conversation.participantName,
+                              conversation.lastMessage ?? 'No message',
+                              conversation.lastMessageTime.toString(),
+                              conversation.profileImageUrl,
+                              conversation.unreadCount,
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),

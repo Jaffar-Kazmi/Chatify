@@ -33,8 +33,20 @@ class AuthRemoteDataSource {
         }
     );
 
-    print(response.body);
+    print('Register status: ${response.statusCode}');
+    print('Register body: ${response.body}');
 
-    return UserModel.fromJson(jsonDecode(response.body)['user']);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final data = jsonDecode(response.body);
+      if (data['user'] == null) {
+        throw Exception('No user in response');
+      }
+      return UserModel.fromJson(data['user']);
+    } else {
+      // Backend error (e.g., 400 username taken, 500, etc.)
+      final data = jsonDecode(response.body);
+      final errorMessage = data['error'] ?? 'Failed to register';
+      throw Exception(errorMessage);
+    }
   }
 }

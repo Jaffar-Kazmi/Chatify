@@ -6,22 +6,43 @@ import jwt from "jsonwebtoken";
 const SALT_ROUNDS = 10;
 const JWT_SECRET = process.env.JWT_SECRET || 'chatsecurity';
 
-export const register = async(req: Request, res: Response) => {
-    const {username, email, password} = req.body;
-    
-    try {
-        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-        const result = await pool.query(
-            'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *', 
-            [username, email, hashedPassword]
-        );
-        const user = result.rows[0];
-        res.status(201).json({user});
-    } catch (error) {
-        console.error('Register error:', error);
-        res.status(500).json({error: 'Failed to register'});
+export const register = async (req: Request, res: Response) => {
+  const { username, email, password } = req.body;
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+    const result = await pool.query(
+      'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email',
+      [username, email, hashedPassword]
+    );
+
+    const user = result.rows[0];
+
+    return res.status(201).json({
+      message: 'User registered successfully',
+      user,
+    });
+  } catch (error: any) {
+    console.error('Register error:', error);
+
+    // Postgres unique violation
+    if (error.code === '23505') {
+      // You can inspect error.constraint if you have multiple uniques
+      if (error.constraint === 'users_username_key') {
+        return res.status(400).json({ error: 'Username already taken' });
+      }
+      if (error.constraint === 'users_email_key') {
+        return res.status(400).json({ error: 'Email already registered' });
+      }
+
+      // Generic duplicate
+      return res.status(400).json({ error: 'User with these credentials already exists' });
     }
-}
+
+    return res.status(500).json({ error: 'Failed to register' });
+  }
+};
 
 export const login = async(req: Request, res: Response): Promise<any> => {
     const {email, password} = req.body;

@@ -151,7 +151,31 @@ class _ProfilePageState extends State<ProfilePage> {
               onPressed: () => setState(() => _isEditing = true),
             ),
           IconButton(
-            onPressed: () => handleLogout(context),
+            onPressed: () async {
+              bool? confirmed = await showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Logout'),
+                    content: const Text('Are you sure you want to logout?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true), // Return true
+                        child: const Text('Logout', style: TextStyle(color: Colors.redAccent)),
+                      ),
+                    ],
+                  );
+                },
+              );
+
+              if (confirmed == true) {
+                handleLogout(context);
+              }
+            },
             icon: const Icon(Icons.logout, color: Colors.redAccent),
           ),
         ],
@@ -166,19 +190,41 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               GestureDetector(
                 onTap: _isEditing ? _pickImage : null,
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundImage: _imageFile != null
-                      ? FileImage(_imageFile!)
-                      : (_profile?.profilePic != null &&
-                      _profile!.profilePic!.startsWith('http'))
-                      ? NetworkImage(_profile!.profilePic!)
-                      : null,
-                  child: (_imageFile == null &&
-                      (_profile?.profilePic == null ||
-                          !_profile!.profilePic!.startsWith('http')))
-                      ? const Icon(Icons.person, size: 60)
-                      : null,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircleAvatar(
+                    radius: 60,
+                    backgroundImage: _imageFile != null
+                        ? FileImage(_imageFile!)
+                        : (_profile?.profilePic != null &&
+                        _profile!.profilePic!.startsWith('http'))
+                        ? NetworkImage(_profile!.profilePic!)
+                        : null,
+                    child: (_imageFile == null &&
+                        (_profile?.profilePic == null ||
+                            !_profile!.profilePic!.startsWith('http')))
+                        ? const Icon(Icons.person, size: 60)
+                        : null,
+                  ),
+                    if (_isEditing)
+                      Positioned(
+                        bottom: 4,
+                          right: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryLight,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.edit,
+                              size: 18,
+                              color: AppColors.primaryDark,
+                            ),
+                          )
+                      )
+                  ],
                 ),
               ),
               const SizedBox(height: 50),

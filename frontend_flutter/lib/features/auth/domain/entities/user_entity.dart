@@ -2,7 +2,7 @@ class UserEntity {
   final String id;
   final String username;
   final String email;
-  final String token;
+  final String? token;
 
   UserEntity({
     required this.id,

@@ -60,7 +60,8 @@ class _RegisterPageState extends State<RegisterPage> {
               SizedBox(height: 20,),
               AuthInputField(hint: 'Password',
                   icon: Icons.lock,
-                  controller: _passwordController),
+                  controller: _passwordController,
+                  isPassword: true),
               SizedBox(height: 20,),
               BlocConsumer<AuthBloc, AuthState> (
                   builder: (context, state) {
@@ -76,6 +77,33 @@ class _RegisterPageState extends State<RegisterPage> {
                   },
                   listener: (context, state) {
                     if (state is AuthSuccess) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: const Row(
+                          children: [
+                            Icon(Icons.check_circle, color: AppColors.background,),
+                            SizedBox(width: 12,),
+                            Text('Registration Successful',
+                              style: TextStyle(
+                                color: AppColors.background,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ]
+                        ),
+                          backgroundColor: AppColors.primaryLight,
+                          duration: Duration(seconds: 2),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          margin: EdgeInsets.all(16),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                      Future.delayed(const Duration(milliseconds: 700), () {
+                        if (!mounted) return;
+                        Navigator.pushNamed(context, '/login');
+                      });
                       Navigator.pushNamed(context, '/login');
                     } else if (state is AuthFailure) {
                       ScaffoldMessenger.of(context).showSnackBar(

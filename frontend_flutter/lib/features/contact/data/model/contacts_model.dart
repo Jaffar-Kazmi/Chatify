@@ -4,18 +4,21 @@ class ContactModel extends ContactEntity {
   ContactModel({
     required String id,
     required String username,
-    required String email
+    required String email,
+    String? profileImageUrl,
   }) : super(
       id: id,
       username: username,
-      email: email
+      email: email,
+      profileImageUrl: profileImageUrl
   );
 
   factory ContactModel.fromJson(Map<String, dynamic> json) {
     return ContactModel(
         id: json['contact_id'],
         username: json['username'],
-        email: json['email']
+        email: json['email'],
+        profileImageUrl: json['profile_image']
     );
   }
 }

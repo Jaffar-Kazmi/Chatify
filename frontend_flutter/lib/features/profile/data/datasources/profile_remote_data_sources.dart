@@ -32,6 +32,8 @@ class ProfileRemoteDataSource {
       },
       body: jsonEncode(profile.toJson()),
     );
+    print('Update profile status: ${response.statusCode}');
+    print('Update profile body: ${response.body}');
 
     if (response.statusCode == 200) {
       return ProfileModel.fromJson(jsonDecode(response.body));

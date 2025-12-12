@@ -192,7 +192,7 @@ class _ChatPageState extends State<ChatPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete chat'),
+        title: const Text('Delete chat',),
         content: const Text(
             'Are you sure you want to delete this conversation?'),
         actions: [
@@ -202,7 +202,7 @@ class _ChatPageState extends State<ChatPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
@@ -245,9 +245,11 @@ class _ChatPageState extends State<ChatPage> {
               radius: 22,
             ),
             const SizedBox(width: 10),
-            Text(
-              widget.mate,
-              style: Theme.of(context).textTheme.titleMedium,
+            Flexible (
+              child: Text(
+                widget.mate,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
           ],
         ),

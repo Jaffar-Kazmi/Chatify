@@ -200,6 +200,20 @@ class AppTheme {
         ),
       ),
 
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.surfaceLight,
+        contentTextStyle: GoogleFonts.inter(
+          color: AppColors.textPrimary,
+          fontSize: FontSizes.standard,
+          fontWeight: FontWeight.w500,
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        elevation: 4,
+      ),
+
       // Text Button Theme
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(

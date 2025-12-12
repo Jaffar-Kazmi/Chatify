@@ -5,8 +5,9 @@ class FetchContacts extends ContactsEvent {}
 class CheckOrCreateConversation extends ContactsEvent {
   final String contactId;
   final String contactName;
+  final String? contactProfileImageUrl;
 
-  CheckOrCreateConversation(this.contactId, this.contactName);
+  CheckOrCreateConversation(this.contactId, this.contactName, this.contactProfileImageUrl);
 }
 
 
