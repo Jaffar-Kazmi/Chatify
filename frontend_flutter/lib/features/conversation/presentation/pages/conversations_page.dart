@@ -268,6 +268,9 @@ class _ConversationsPageState extends State<ConversationsPage> {
       String? profileImageUrl,
       int unreadCount,
       ) {
+    final isImageMessage = message.startsWith('[IMAGE]');
+    final displayMessage = isImageMessage ? 'Sent an image' : message;
+
     return ListTile(
       contentPadding:
       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -312,7 +315,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
         ),
       ),
       subtitle: Text(
-        message,
+        displayMessage,
         style: const TextStyle(color: AppColors.accent),
         overflow: TextOverflow.ellipsis,
       ),

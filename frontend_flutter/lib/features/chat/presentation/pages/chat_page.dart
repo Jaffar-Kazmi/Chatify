@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:chat_app/core/widgets/profile_avatar.dart';
 import 'package:chat_app/features/chat/data/datasources/messages_remote_data_sources.dart';
 import 'package:chat_app/features/chat/presentation/bloc/chat_event.dart';
@@ -5,8 +7,10 @@ import 'package:chat_app/features/conversation/presentation/bloc/conversations_b
 import 'package:chat_app/features/conversation/presentation/bloc/conversations_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart' show FlutterImageCompress;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/theme.dart';
 import '../bloc/chat_bloc.dart';
@@ -32,6 +36,7 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final _storage = const FlutterSecureStorage();
   final ImagePicker _picker = ImagePicker();
+  final MessageRemoteDataSource _messageDataSource = MessageRemoteDataSource();
 
   String userId = '';
   String botId = "00000000-0000-0000-0000-000000000000";
@@ -73,13 +78,38 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // OPEN CAMERA  ------------------------------
-  Future<void> _openCamera() async {
-    final XFile? photo =
-    await _picker.pickImage(source: ImageSource.camera);
-    if (photo == null) return;
-    // TODO: upload + send as image message
-    print('Picked image: ${photo.path}');
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? image = await _picker.pickImage(source: source);
+    if (image == null) return;
+
+    try {
+      final compressedFile = await _compressImage(File(image.path));
+      final imageUrl = await _messageDataSource.uploadImage(compressedFile);
+      BlocProvider.of<ChatBloc>(context).add(
+        SendMessageEvent(widget.conversationId, '[IMAGE]$imageUrl'),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed: $e')),
+      );
+    }
+  }
+
+  Future<File> _compressImage(File imageFile) async {
+    final tempDir = await getTemporaryDirectory();
+    final targetPath = '${tempDir.absolute.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    final result = await FlutterImageCompress.compressAndGetFile(
+      imageFile.absolute.path,
+        targetPath,
+        quality: 70,
+    );
+
+    if (result != null){
+      return File(result.path);
+    } else {
+      return imageFile;
+    }
   }
 
   // DELETE CONVERSATION -----------------------
@@ -224,20 +254,36 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildReceivedMessage(BuildContext context, String message) {
+    final isImage = message.startsWith('[IMAGE]');
+    final imageUrl = isImage ? message.replaceFirst('[IMAGE]', '') : null;
+
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
         margin:
         const EdgeInsets.only(left: 20, top: 5, bottom: 5),
-        padding: const EdgeInsets.all(10),
+        padding: isImage ? const EdgeInsets.all(2) : const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: AppColors.primaryLight,
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15), bottomRight: Radius.circular(15), bottomLeft: Radius.circular(3)),
+          borderRadius: isImage ? BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15), bottomRight: Radius.circular(15), bottomLeft: Radius.circular(3)) : BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15), bottomRight: Radius.circular(15), bottomLeft: Radius.circular(3)),
         ),
-        child: Text(
-          message,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.primaryDark
+        child: isImage
+          ? ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: Image.network(
+              imageUrl!,
+              width: 200,
+              height: 200,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(Icons.image);
+              },
+            ),
+          )
+          : Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.primaryDark
           ),
         ),
       ),
@@ -245,17 +291,33 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildSentMessage(BuildContext context, String message) {
+    final isImage = message.startsWith('[IMAGE]');
+    final imageUrl = isImage ? message.replaceFirst('[IMAGE]', '') : null;
+
     return Align(
       alignment: Alignment.centerRight,
       child: Container(
         margin:
         const EdgeInsets.only(right: 20, top: 5, bottom: 5),
-        padding: const EdgeInsets.all(10),
+        padding: isImage ? const EdgeInsets.all(2) : const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: AppColors.primaryDark,
           borderRadius: BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15), bottomLeft: Radius.circular(15), bottomRight: Radius.circular(3)),
         ),
-        child: Text(
+        child: isImage
+            ? ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(
+            imageUrl!,
+            width: 200,
+            height: 200,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) =>
+            const Text('Failed to load image',
+                style: TextStyle(color: Colors.white70)),
+          ),
+        )
+            : Text(
           message,
           style: Theme.of(context).textTheme.bodyMedium,
         ),
@@ -278,7 +340,32 @@ class _ChatPageState extends State<ChatPage> {
               Icons.camera_alt,
               color: AppColors.primaryLight,
             ),
-            onTap: _openCamera,
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (context) => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.camera_alt),
+                      title: const Text('Camera'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickImage(ImageSource.camera);
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.image),
+                      title: const Text('Gallery'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickImage(ImageSource.gallery);
+                      },
+                    )
+                  ],
+                ),
+              );
+            },
           ),
           Expanded(
             child: TextField(

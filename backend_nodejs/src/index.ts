@@ -25,12 +25,14 @@ import profileRoutes from './routes/profileRoutes';
 import conversationRoutes from './routes/conversationRoutes';
 import messageRoutes from './routes/messageRoutes';
 import contactRoutes from './routes/contactRoutes';
+import uploadRoutes from './routes/uploadRoutes';
 
 app.use('/auth', authRoutes);
 app.use('/profile', profileRoutes);
 app.use('/conversations', conversationRoutes);
 app.use('/messages', messageRoutes);
 app.use('/contacts', contactRoutes);
+app.use('/api', uploadRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ 
