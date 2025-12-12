@@ -9,8 +9,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart' show FlutterImageCompress;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:gal/gal.dart';
 
 import '../../../../core/theme.dart';
 import '../bloc/chat_bloc.dart';
@@ -112,7 +115,79 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // DELETE CONVERSATION -----------------------
+  Future<void> _saveImageToGallery(String imageUrl) async {
+    final confirm = await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Save image'),
+          content: const Text('Do you want to save this image to galley'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(context, true), child: Text('Save')),
+          ],
+        ),
+    );
+    if (confirm == false) return;
+    FocusScope.of(context).unfocus();
+
+    try {
+      final status = await Permission.photos.request();
+
+      if (status.isDenied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please allow photo access'))
+        );
+        return;
+      }
+
+      if (status.isPermanentlyDenied) {
+        openAppSettings();
+        return;
+      }
+
+      final response = await http.get(Uri.parse(imageUrl));
+      if (response.statusCode != 200) {
+        throw Exception('Failed to download image');
+      }
+
+      await Gal.putImageBytes(
+        response.bodyBytes,
+        album: 'Chatify',
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: AppColors.background),
+              SizedBox(width: 12),
+              Text(
+                'Image saved to gallery',
+                style: TextStyle(
+                  color: AppColors.background,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: AppColors.primary,
+          duration: const Duration(seconds: 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: const EdgeInsets.all(16),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save image: $e')),
+      );
+      print('Failed to save image: $e');
+    }
+  }
+
   Future<void> _onDeleteConversation() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -268,7 +343,9 @@ class _ChatPageState extends State<ChatPage> {
           borderRadius: isImage ? BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15), bottomRight: Radius.circular(15), bottomLeft: Radius.circular(3)) : BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15), bottomRight: Radius.circular(15), bottomLeft: Radius.circular(3)),
         ),
         child: isImage
-          ? ClipRRect(
+          ? GestureDetector(
+            onTap: () => _saveImageToGallery(imageUrl),
+            child: ClipRRect(
             borderRadius: BorderRadius.circular(15),
             child: Image.network(
               imageUrl!,
@@ -280,6 +357,7 @@ class _ChatPageState extends State<ChatPage> {
               },
             ),
           )
+        )
           : Text(
               message,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -305,7 +383,9 @@ class _ChatPageState extends State<ChatPage> {
           borderRadius: BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15), bottomLeft: Radius.circular(15), bottomRight: Radius.circular(3)),
         ),
         child: isImage
-            ? ClipRRect(
+            ? GestureDetector(
+          onTap: () => _saveImageToGallery(imageUrl),
+          child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Image.network(
             imageUrl!,
@@ -316,6 +396,7 @@ class _ChatPageState extends State<ChatPage> {
             const Text('Failed to load image',
                 style: TextStyle(color: Colors.white70)),
           ),
+        )
         )
             : Text(
           message,
