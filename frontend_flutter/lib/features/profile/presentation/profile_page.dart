@@ -233,10 +233,14 @@ class _ProfilePageState extends State<ProfilePage> {
               TextField(
                 controller: _usernameController,
                 enabled: _isEditing,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Username',
-                  prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.person),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 1),
+                  ),
                 ),
                 style: TextStyle(color: AppColors.textPrimary),
               ),
@@ -246,11 +250,14 @@ class _ProfilePageState extends State<ProfilePage> {
               TextField(
                 controller: _emailController,
                 enabled: _isEditing,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Email',
-                  prefixIcon: Icon(Icons.email),
-                  border: OutlineInputBorder(),
-                ),
+                  prefixIcon: const Icon(Icons.email),
+                  border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 1),
+                  ),                ),
                 style: TextStyle(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 30),
@@ -287,6 +294,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   decoration: InputDecoration(
                     labelText: 'Current Password',
                     prefixIcon: const Icon(Icons.lock),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1),
+                    ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _showPassword ? Icons.visibility : Icons.visibility_off,
@@ -303,6 +314,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   decoration: InputDecoration(
                     labelText: 'New Password',
                     prefixIcon: const Icon(Icons.lock),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1),
+                    ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _showNewPass ? Icons.visibility : Icons.visibility_off,
@@ -319,6 +334,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   decoration: InputDecoration(
                     labelText: 'Confirm New Password',
                     prefixIcon: const Icon(Icons.lock),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1),
+                    ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _showNewPass ? Icons.visibility : Icons.visibility_off,

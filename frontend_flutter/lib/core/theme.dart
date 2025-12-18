@@ -131,8 +131,6 @@ class AppTheme {
 
       // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: AppColors.messageInput,
         labelStyle: GoogleFonts.inter(
           color: AppColors.textSecondary,
           fontSize: FontSizes.standardUp,

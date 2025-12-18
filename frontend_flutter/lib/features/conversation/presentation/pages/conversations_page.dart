@@ -97,9 +97,11 @@ class _ConversationsPageState extends State<ConversationsPage> {
             ? TextField(
           controller: _searchController,
           autofocus: true,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: 'Search by username',
             border: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            enabledBorder: InputBorder.none,
           ),
           style: Theme.of(context).textTheme.bodyLarge,
           onChanged: (value) {

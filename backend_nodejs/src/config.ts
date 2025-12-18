@@ -1,7 +1,5 @@
 export const AI_BOT_ID = "00000000-0000-0000-0000-000000000000";
 
-export const HOST = "192.168.100.5"
-
 export const getBaseUrl = (): string => {
     const baseUrl = process.env.BASE_URL || 'http://localhost';
     const port = process.env.PORT || '3000';

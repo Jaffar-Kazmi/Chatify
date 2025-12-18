@@ -61,8 +61,8 @@ class _ContactsPageState extends State<ContactsPage> {
                 itemBuilder: (context, index){
                   final contact = state.contacts[index];
                   return ListTile(
-                    title: Text(contact.username),
-                    subtitle: Text(contact.email),
+                    title: Text(contact.username, style: Theme.of(context).textTheme.headlineSmall,),
+                    subtitle: Text(contact.email, style: TextStyle(color: AppColors.textSecondary,),),
                     onTap: () {
                       BlocProvider.of<ContactsBloc>(context).add(CheckOrCreateConversation(contact.id, contact.username, contact.profileImageUrl));
                     },
@@ -95,11 +95,25 @@ class _ContactsPageState extends State<ContactsPage> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
        title: Text(
            'Add contact',
-         style: Theme.of(context).textTheme.bodyMedium,
+         style: Theme.of(context).textTheme.bodyLarge,
        ),
        content: TextField(
          controller: emailController,
-         decoration: InputDecoration(hintText: 'Enter contact email', hintStyle: Theme.of(context).textTheme.bodyMedium,),
+         decoration: InputDecoration(
+           hintText: 'Enter contact email',
+           hintStyle: Theme.of(context).textTheme.bodyMedium,
+           filled: true,
+           contentPadding: const EdgeInsets.all(10),
+           fillColor: AppColors.surfaceLight,
+           border: OutlineInputBorder(
+             borderRadius: BorderRadius.circular(12),
+             borderSide: const BorderSide(color: AppColors.border),
+           ),
+           focusedBorder: OutlineInputBorder(
+             borderRadius: BorderRadius.circular(12),
+             borderSide: const BorderSide(color: AppColors.primary, width: 1),
+           ),
+         )
        ),
         actions: [
           TextButton(
@@ -114,6 +128,15 @@ class _ContactsPageState extends State<ContactsPage> {
                   Navigator.pop(context);
                 }
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: AppColors.darkest,
+                elevation: 3,
+                padding: const EdgeInsets.all(5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
               child: Text(
                   'Add',
                 style: Theme.of(context).textTheme.bodyMedium,
