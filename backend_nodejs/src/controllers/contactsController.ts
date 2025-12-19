@@ -1,11 +1,12 @@
 import pool from "../models/db";
 import { Request, Response } from "express";
 
+interface AuthRequest extends Request {
+  user?: any;
+}
+
 export const fetchContacts = async (req: Request, res: Response): Promise<any> => {
-    let userId = null;
-    if(req.user) {
-        userId = req.user.id;
-    }
+    const userId = (req as AuthRequest).user?.id; 
 
     try {
         const result = await pool.query(
@@ -30,10 +31,8 @@ export const fetchContacts = async (req: Request, res: Response): Promise<any> =
 }
 
 export const addContact = async (req: Request, res: Response) => {
-    let userId = null;
-    if (req.user) {
-        userId = req.user.id;
-    }
+      const userId = (req as AuthRequest).user?.id; 
+
     const {contactEmail} = req.body;
 
     try {

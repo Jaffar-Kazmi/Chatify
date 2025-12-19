@@ -5,10 +5,13 @@ import fs from 'fs';
 
 const baseUrl = process.env.BASE_URL;
 
+interface AuthRequest extends Request {
+  user?: { id: string };
+}
 
 export const getProfile = async (req: Request, res: Response) => {
-  const userId = req.user!.id;
-
+  const userId = (req as AuthRequest).user?.id; 
+  
   try {
     const result = await pool.query(
       'SELECT id, username, email, profile_image FROM users WHERE id = $1',
@@ -35,7 +38,7 @@ export const getProfile = async (req: Request, res: Response) => {
 };
 
 export const updateProfile = async (req: Request, res: Response) => {
-  const userId = req.user!.id;
+  const userId = (req as AuthRequest).user?.id; 
   const { username, email } = req.body;
 
   try {
@@ -51,7 +54,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 };
 
 export const uploadProfilePic = async (req: Request, res: Response) => {
-  const userId = req.user!.id;
+  const userId = (req as AuthRequest).user?.id; 
   const file = req.file;
 
   if (!file) {

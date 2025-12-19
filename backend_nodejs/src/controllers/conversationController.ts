@@ -1,13 +1,14 @@
 import { Request, Response } from "express";
 import pool from "../models/db";
 
-const AI_BOT_ID = 'your-ai-bot-id';
+const AI_BOT_ID = 'ai-bot-id';
+
+interface AuthRequest extends Request {
+  user?: any; 
+}
 
 export const fetchAllConversationsByUserId = async (req: Request, res: Response) => {
-    let userId = null;
-    if (req.user) {
-        userId = req.user.id;
-    }
+    const userId = (req as AuthRequest).user?.id; 
 
     console.log('Fetch conversations for user:', userId);
 
@@ -62,10 +63,8 @@ export const fetchAllConversationsByUserId = async (req: Request, res: Response)
 }
 
 export const checkOrCreateConvesation = async (req: Request, res: Response): Promise<any> => {
-    let userId = null;
-    if (req.user) {
-        userId = req.user.id;
-    }
+    const userId = (req as AuthRequest).user?.id; 
+
 
     const { contactId } = req.body;
 
@@ -157,7 +156,8 @@ export const deleteConversation = async (req: Request, res: Response) => {
 };
 
 export const markConversationRead = async (req: Request, res: Response) => {
-    const userId = req.user?.id;
+    const userId = (req as AuthRequest).user?.id; 
+
     const conversationId = req.params.id;
 
     if (!userId) {
