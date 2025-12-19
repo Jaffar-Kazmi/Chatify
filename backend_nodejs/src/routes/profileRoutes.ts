@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import upload from '../middlewares/cloudinaryUpload';
+import upload from '../middlewares/uploadProfileImage';
 import { verifyToken } from '../middlewares/authMiddleware'
 import { getProfile, updateProfile, uploadProfilePic } from '../controllers/profileController';
 import path from 'path';

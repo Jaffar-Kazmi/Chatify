@@ -66,7 +66,7 @@ class _ProfilePageState extends State<ProfilePage> {
             content: Text('File too large. Maximum size allowed is 10 MB.'),
           ),
         );
-        return; // do not set the file
+        return;
       }
       setState(() => _imageFile = File(pickedFile.path));
     }
