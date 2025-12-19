@@ -56,6 +56,18 @@ class _ProfilePageState extends State<ProfilePage> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
+      final file = File(pickedFile.path);
+      final maxSize = 10 * 1024 * 1024; // 10 MB
+
+      if (file.lengthSync() > maxSize) {
+        // Show message to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('File too large. Maximum size allowed is 10 MB.'),
+          ),
+        );
+        return; // do not set the file
+      }
       setState(() => _imageFile = File(pickedFile.path));
     }
   }
