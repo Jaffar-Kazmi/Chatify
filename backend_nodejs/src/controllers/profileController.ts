@@ -5,7 +5,7 @@ const baseUrl = process.env.BASE_URL;
 
 interface AuthRequest extends Request {
   user?: { id: string };
-  file?: Express.Multer.File;
+  file?: any;
 }
 
 export const getProfile = async (req: Request, res: Response) => {
