@@ -3,23 +3,19 @@ import pool from "../models/db";
 import uploadMessageImage from "../middlewares/uploadMessageImage";
 
 export const fetchAllMessagessByConversationId = async (req: Request, res: Response) => {
-    const { conversationId } = req.params;
-
-    try {
-        const result = await pool.query(
-            `
-            SELECT m.id, m.content, m.sender_id, m.conversation_id, m.created_at
-            FROM messages m
-            WHERE m.conversation_id = $1
-            ORDER by m.created_at ASC
-            `,
-            [conversationId]
-        );
-
-        res.json(result.rows);
-    } catch (err) {
-        res.status(500).json({error: 'Failed to fetch messages'});
-    }
+  const { conversationId } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT m.id, m.content, m.sender_id, m.conversation_id, m.created_at
+       FROM messages m
+       WHERE m.conversation_id = $1
+       ORDER BY m.created_at ASC`,
+      [conversationId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
 }
 
 export const createMessage = async (req: Request, res: Response) => {
@@ -32,18 +28,23 @@ export const createMessage = async (req: Request, res: Response) => {
     }
 
     const { conversationId, content } = req.body;
-
+    
     if (!conversationId) {
       return res.status(400).json({ error: 'conversationId is required' });
     }
 
     let messageContent = content || "";
+    
+    // Check if file was uploaded to Cloudinary
     if (req.file) {
-      const imageUrl = req.file.path;
+      // Get the Cloudinary URL from the uploaded file
+      const imageUrl = (req.file as any).path; // Cloudinary provides the full URL in 'path'
       console.log('Uploaded image URL:', imageUrl);
+      
       messageContent = content 
         ? `${content} [IMAGE]${imageUrl}` 
         : `[IMAGE]${imageUrl}`;
+      
       console.log('Updated message content:', messageContent);
     }
 
@@ -58,7 +59,7 @@ export const createMessage = async (req: Request, res: Response) => {
          RETURNING id, content, sender_id, conversation_id, created_at`,
         [conversationId, user.id, messageContent]
       );
-
+      
       console.log("Message saved:", result.rows[0]);
       res.status(201).json(result.rows[0]);
     } catch (err) {

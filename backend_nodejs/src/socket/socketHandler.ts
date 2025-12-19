@@ -9,9 +9,6 @@ export const setupSocketHandlers = (io: Server) => {
     if (!token) {
       return next(new Error('Authentication error'));
     }
-    
-    // You can add JWT verification here if needed
-    // For now, just allow the connection
     next();
   });
 

@@ -18,7 +18,6 @@ const io = new Server(server, {
 
 app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 import authRoutes from './routes/authRoutes';
 import profileRoutes from './routes/profileRoutes';

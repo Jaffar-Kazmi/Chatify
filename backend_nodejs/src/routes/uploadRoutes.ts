@@ -1,62 +1,45 @@
 import { Router, Request, Response } from 'express';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
+import cloudinary from '../config/cloudinary';
 import { verifyToken } from '../middlewares/authMiddleware';
 
 const router = Router();
 
-const uploadDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}${path.extname(file.originalname)}`;
-        cb(null, uniqueName);
-    },
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'chatify_uploads',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ width: 800, height: 800, crop: 'limit' }]
+  } as any
 });
 
 const upload = multer({
-    storage,
-    limits: { fileSize: 1024 * 1024 * 5 },
-    fileFilter: (req, file, cb) => {
-        const allowed = /jpeg|jpg|png|gif/;
-        const ext = path.extname(file.originalname).toLowerCase();
-        if (allowed.test(ext)) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only images are allowed'));
-        }
-    },
+  storage,
 });
 
 router.post('/upload', verifyToken, upload.single('image'), (req: Request, res: Response) => {
-    console.log('Upload request received');
-    console.log('File:', req.file);
+  console.log('Cloudinary upload request received');
+  
+  if (!req.file) {
+    console.log('No file in request');
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
 
-    if (!req.file) {
-        console.log('No file in request');
-        return res.status(400).json({ error: 'No file uploaded' });
-    }
+  console.log('Cloudinary file:', {
+    path: req.file.path,      
+    filename: req.file.filename
+  });
 
-
-  console.log('File saved to:', req.file.path);
-  console.log('Filename:', req.file.filename);
-
-    const imageUrl = `${process.env.BASE_URL}/uploads/${req.file.filename}`;
-
-      console.log('Returning imageUrl:', imageUrl);
-    res.json({ success: true, imageUrl, filename: req.file.filename });
+  const imageUrl = req.file.path; 
+  console.log('Returning Cloudinary URL:', imageUrl);
+  
+  res.json({ 
+    success: true, 
+    imageUrl,        
+    filename: req.file.filename 
+  });
 });
-
-router.use('/uploads', (req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    next();
-})
 
 export default router;
