@@ -25,7 +25,6 @@ export const fetchAllMessagessByConversationId = async (req: Request, res: Respo
 export const createMessage = async (req: Request, res: Response) => {
   const user = (req as any).user;
   
-  // Wrap multer upload inside the controller
   uploadMessageImage.single('image')(req, res, async (err: any) => {
     if (err) {
       console.error('Multer error:', err);
@@ -38,11 +37,14 @@ export const createMessage = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'conversationId is required' });
     }
 
-    // Determine the message content: text or image URL
     let messageContent = content || "";
     if (req.file) {
-      const imageUrl = req.file.path; // Cloudinary URL
-      messageContent = content ? `${content} [IMAGE]${imageUrl}` : `[IMAGE]${imageUrl}`;
+      const imageUrl = req.file.path;
+      console.log('Uploaded image URL:', imageUrl);
+      messageContent = content 
+        ? `${content} [IMAGE]${imageUrl}` 
+        : `[IMAGE]${imageUrl}`;
+      console.log('Updated message content:', messageContent);
     }
 
     if (!messageContent) {
@@ -51,11 +53,9 @@ export const createMessage = async (req: Request, res: Response) => {
 
     try {
       const result = await pool.query(
-        `
-        INSERT INTO messages (conversation_id, sender_id, content)
-        VALUES ($1, $2, $3)
-        RETURNING id, content, sender_id, conversation_id, created_at;
-        `,
+        `INSERT INTO messages (conversation_id, sender_id, content)
+         VALUES ($1, $2, $3)
+         RETURNING id, content, sender_id, conversation_id, created_at`,
         [conversationId, user.id, messageContent]
       );
 
