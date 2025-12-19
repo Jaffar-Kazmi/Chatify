@@ -39,9 +39,10 @@ export const createMessage = async (req: Request, res: Response) => {
     }
 
     // Determine the message content: text or image URL
-    let messageContent = content || null;
+    let messageContent = content || "";
     if (req.file) {
-      messageContent = (req.file as any).path; // Cloudinary URL
+      const imageUrl = req.file.path; // Cloudinary URL
+      messageContent = content ? `${content} [IMAGE]${imageUrl}` : `[IMAGE]${imageUrl}`;
     }
 
     if (!messageContent) {
@@ -58,13 +59,11 @@ export const createMessage = async (req: Request, res: Response) => {
         [conversationId, user.id, messageContent]
       );
 
-      const message = result.rows[0];
-      console.log('createMessage: inserted', message);
-
-      return res.status(201).json(message);
+      console.log("Message saved:", result.rows[0]);
+      res.status(201).json(result.rows[0]);
     } catch (err) {
-      console.error('Error saving message:', err);
-      return res.status(500).json({ error: 'Failed to save message' });
+      console.error("Error saving message:", err);
+      res.status(500).json({ error: "Failed to save message" });
     }
   });
 };
