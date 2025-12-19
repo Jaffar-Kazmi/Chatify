@@ -1,3 +1,3 @@
 class AppConstants {
-  static const String baseUrl = 'http://192.168.100.5:3000';
+  static const String baseUrl = 'https://chatify-ig9t.onrender.com';
 }

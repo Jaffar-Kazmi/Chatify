@@ -31,6 +31,7 @@ import 'features/conversation/data/datasources/coversation_remote_data_source.da
 import 'features/conversation/data/repositories/conversations_repository_implementation.dart';
 import 'features/conversation/presentation/bloc/conversations_bloc.dart';
 import 'features/profile/presentation/profile_page.dart';
+import 'core/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -102,7 +103,9 @@ class MyApp extends StatelessWidget {
         title: 'Flutter Demo',
         theme: AppTheme.darkTheme,
         debugShowCheckedModeBanner: false,
-        home: LoginPage(),
+        home: SplashScreen(
+          nextScreen: LoginPage(),
+        ),
         routes: {
           '/login': (context) => LoginPage(),
           '/register': (context) => RegisterPage(),
