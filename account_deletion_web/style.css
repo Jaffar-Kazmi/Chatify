@@ -1,0 +1,141 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+:root {
+    /* Defined Color Palette */
+    --vibrant-teal: #54ACBF;
+    --light-cyan: #A7EBF2;
+    --deep-blue: #26658C;
+    --dark-navy: #023859;
+    --deepest-navy: #011C40;
+}
+
+body {
+    background: linear-gradient(135deg, var(--deepest-navy) 0%, var(--dark-navy) 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    color: var(--light-cyan);
+}
+
+/* --- UPDATED: Larger Form Container --- */
+.form-wrapper {
+    background-color: var(--dark-navy);
+    /* Increased padding for more breathing room */
+    padding: 60px; 
+    border-radius: 16px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    width: 100%;
+    /* Increased max-width from 450px to 800px */
+    max-width: 800px; 
+    border: 1px solid var(--deep-blue);
+}
+
+/* Header Styles */
+header {
+    text-align: center;
+    margin-bottom: 40px; /* Increased spacing */
+}
+
+header h1 {
+    color: var(--vibrant-teal);
+    margin-bottom: 15px;
+    font-size: 2.5rem; /* Larger Title */
+}
+
+header p {
+    font-size: 1.1rem; /* Larger Subtitle */
+    opacity: 0.9;
+    line-height: 1.6;
+    max-width: 80%;
+    margin: 0 auto;
+}
+
+/* Form Elements */
+.input-group {
+    margin-bottom: 30px; /* More space between inputs */
+}
+
+label {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 1.1rem; /* Larger Label */
+    color: var(--vibrant-teal);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* --- UPDATED: Larger Inputs --- */
+input, textarea {
+    width: 100%;
+    padding: 18px; /* Taller input fields */
+    border-radius: 8px;
+    border: 2px solid var(--deep-blue);
+    background-color: var(--deepest-navy);
+    color: var(--light-cyan);
+    font-size: 1.1rem; /* Larger typing text */
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+input::placeholder, textarea::placeholder {
+    color: var(--deep-blue);
+    opacity: 0.7;
+}
+
+/* Input Focus States */
+input:focus, textarea:focus {
+    border-color: var(--vibrant-teal);
+    box-shadow: 0 0 12px rgba(84, 172, 191, 0.4);
+}
+
+.security-note {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: var(--deep-blue);
+}
+
+/* --- UPDATED: Larger Button --- */
+.submit-btn {
+    width: 100%;
+    padding: 20px; /* Taller button */
+    background-color: var(--vibrant-teal);
+    color: var(--deepest-navy);
+    border: none;
+    border-radius: 8px;
+    font-size: 1.2rem; /* Larger button text */
+    font-weight: 800;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    margin-top: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.submit-btn:hover {
+    background-color: var(--light-cyan);
+}
+
+.submit-btn:active {
+    transform: scale(0.98);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .form-wrapper {
+        padding: 30px;
+        max-width: 100%;
+    }
+    
+    header h1 {
+        font-size: 2rem;
+    }
+}
