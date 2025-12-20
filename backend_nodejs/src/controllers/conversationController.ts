@@ -48,19 +48,35 @@ export const fetchAllConversationsByUserId = async (req: Request, res: Response)
 
         console.log('Found conversations:', result.rows.length);
 
-        const conversations = result.rows.map(row => ({
-            ...row,
-            participant_profile_image: row.participant_profile_image
-                ? `${process.env.BASE_URL}/uploads/profiles/${row.participant_profile_image}`
-                : null
-        }));
+            const conversations = result.rows.map((row) => {
+      let imageUrl = row.participant_profile_image;
 
-        res.json(conversations);
-    } catch (e) {
-        console.error('Fetch conversations error:', e);
-        res.status(500).json({ error: 'Failed to fetch conversation' });
-    }
-}
+      if (imageUrl) {
+        if (!imageUrl.startsWith("http")) {
+          // Local image stored on backend
+          imageUrl = `${process.env.BASE_URL}/uploads/profiles/${imageUrl}`;
+        }
+      } else {
+        imageUrl = null;
+      }
+
+      return {
+        ...row,
+        participant_profile_image: imageUrl,
+      };
+    });
+
+    console.log(
+      "Resolved conversation images:",
+      conversations.map((c) => c.participant_profile_image)
+    );
+
+    res.json(conversations);
+  } catch (e) {
+    console.error("Fetch conversations error:", e);
+    res.status(500).json({ error: "Failed to fetch conversation" });
+  }
+};
 
 export const checkOrCreateConvesation = async (req: Request, res: Response): Promise<any> => {
     const userId = (req as AuthRequest).user?.id; 
