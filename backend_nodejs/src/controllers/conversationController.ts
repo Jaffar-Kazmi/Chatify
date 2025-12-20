@@ -48,8 +48,8 @@ export const fetchAllConversationsByUserId = async (req: Request, res: Response)
 
         console.log('Found conversations:', result.rows.length);
 
-            const conversations = result.rows.map((row) => {
-      let imageUrl = row.participant_profile_image;
+        const conversations = result.rows.map((row) => {
+        let imageUrl = row.participant_profile_image;
 
       if (imageUrl) {
         if (!imageUrl.startsWith("http")) {
