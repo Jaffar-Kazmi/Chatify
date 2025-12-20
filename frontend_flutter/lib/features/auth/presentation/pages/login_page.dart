@@ -3,6 +3,7 @@ import 'package:chat_app/features/auth/presentation/bloc/auth_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/widgets/no_internet_widget.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
 import '../widgets/auth_button.dart';
@@ -62,6 +63,17 @@ class _LoginPage extends State<LoginPage> {
                         child: CircularProgressIndicator(),
                       );
                     }
+                    if (state is AuthFailure && state.error.contains('No internet connection')) {
+                       return Padding(
+                         padding: const EdgeInsets.only(top: 10.0),
+                         child: Center(
+                             child: Text(
+                                 'No Internet Connection',
+                               style: TextStyle(color: AppColors.error),
+                             )
+                         ),
+                       );
+                    }
                     return  AuthButton(
                         text: 'Login',
                         onPressed: _onLogin
@@ -69,7 +81,6 @@ class _LoginPage extends State<LoginPage> {
                   },
                   listener: (context, state) {
                     if (state is AuthSuccess) {
-                      print("Good");
                       Navigator.pushNamedAndRemoveUntil(context, '/home', (route)=> false);
                     } else if (state is AuthFailure) {
                       ScaffoldMessenger.of(context).showSnackBar(

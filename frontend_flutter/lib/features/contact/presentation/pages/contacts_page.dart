@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme.dart';
+import '../../../../core/widgets/no_internet_widget.dart';
 import '../../../chat/presentation/pages/chat_page.dart';
 import '../bloc/contacts_event.dart';
 
@@ -71,6 +72,11 @@ class _ContactsPageState extends State<ContactsPage> {
               );
             }
             else if (state is ContactError) {
+              if (state.error.contains('No internet connection')) {
+                return NoInternetWidget(
+                  onRetry: () => BlocProvider.of<ContactsBloc>(context).add(FetchContacts()),
+                );
+              }
               return Center(child: Text(state.error),);
             }
             else {

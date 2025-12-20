@@ -41,7 +41,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _storage.write(key: 'userId', value: user.id);
       emit(AuthSuccess(message: "Login Successful"));
     } catch (e) {
-      emit(AuthFailure(error: "Login Failed"));
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      emit(AuthFailure(error: msg.isEmpty ? 'Login Failed' : msg));
     }
   }
 }

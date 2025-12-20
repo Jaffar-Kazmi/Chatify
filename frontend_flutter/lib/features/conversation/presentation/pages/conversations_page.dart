@@ -12,6 +12,7 @@ import '../../../contact/presentation/pages/contacts_page.dart';
 import '../../../profile/data/datasources/profile_remote_data_sources.dart';
 import '../../../profile/presentation/profile_page.dart';
 import '../bloc/conversations_event.dart';
+import 'package:chat_app/core/widgets/no_internet_widget.dart';
 
 class ConversationsPage extends StatefulWidget {
   const ConversationsPage({super.key});
@@ -44,7 +45,6 @@ class _ConversationsPageState extends State<ConversationsPage> {
         _myProfileImageUrl = profileImageUrl;
       });
     } catch (e) {
-      print('Failed to fetch profile image: $e');
     }
   }
 
@@ -251,6 +251,11 @@ class _ConversationsPageState extends State<ConversationsPage> {
               ],
             );
           } else if (state is ConversationError) {
+            if (state.error.contains('No internet connection')) {
+              return NoInternetWidget(
+                onRetry: () => context.read<ConversationsBloc>().add(FetchConversations()),
+              );
+            }
             return Center(child: Text(state.error));
           } else {
             return const Center(child: Text('No conversations found'));

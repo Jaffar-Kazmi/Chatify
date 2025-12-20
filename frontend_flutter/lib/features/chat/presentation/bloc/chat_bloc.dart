@@ -63,18 +63,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       // Join conversation and listen for new messages
       _socketService.socket.emit('joinConversation', event.conversationId);
       _socketService.socket.on('newMessage', (data) {
-        print("step1 - receive: $data");
         add(ReceiveMessageEvent(data));
       });
     } catch (error) {
-      print('Error loading messages: $error');
-      emit(ChatErrorState('Failed to load messages'));
+      final msg = error.toString().replaceFirst('Exception: ', '');
+      emit(ChatErrorState(msg.isEmpty ? 'Failed to load messages' : msg));
     }
   }
 
   Future<void> _onSendMessage(SendMessageEvent event, Emitter<ChatState> emit) async {
     String userId = await _storage.read(key: 'userId') ?? '';
-    print('userId: $userId');
 
     final newMessage = {
       'conversationId': event.conversationId,
@@ -91,8 +89,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       ReceiveMessageEvent event,
       Emitter<ChatState> emit,
       ) async {
-    print('step2 - receive event called');
-    print(event.message);
 
     try {
       final message = MessageEntity(
@@ -117,8 +113,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       }
 
     } catch (e) {
-      print('Error processing received message: $e');
-      print('Message data: ${event.message}');
     }
   }
 
@@ -128,7 +122,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       final dailyQuestion = await fetchDailyQuestionUseCase(event.conversationId);
       emit(ChatDailyQuestionLoadedState(dailyQuestion));
     } catch (error) {
-      emit(ChatErrorState('Failed to load daily question'));
+      final msg = error.toString().replaceFirst('Exception: ', '');
+      emit(ChatErrorState(msg.isEmpty ? 'Failed to load daily question' : msg));
     }
 
   }
@@ -142,7 +137,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       await deleteConversationUseCase(event.conversationId);
       emit(ChatLoadedState([]));
     } catch (e) {
-      emit(ChatErrorState('Failed to delete conversation'));
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      emit(ChatErrorState(msg.isEmpty ? 'Failed to delete conversation' : msg));
     }
   }
 }

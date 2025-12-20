@@ -1,12 +1,16 @@
 import 'dart:convert';
 
 import 'package:chat_app/core/constants.dart';
+import 'package:chat_app/core/network_checker.dart';
 import 'package:chat_app/features/auth/data/models/user_model.dart';
 import 'package:http/http.dart' as http;
 
 class AuthRemoteDataSource {
 
   Future<UserModel> login({required String email, required String password}) async {
+    if (!await NetworkChecker.hasNetwork()){
+      throw Exception('No internet connection');
+    }
     final response = await http.post(
       Uri.parse('${AppConstants.baseUrl}/auth/login'),
       body: jsonEncode({
@@ -21,6 +25,10 @@ class AuthRemoteDataSource {
   }
 
   Future<UserModel> register({required String username, required String email, required String password}) async {
+    if (!await NetworkChecker.hasNetwork()){
+      throw Exception('No internet connection');
+    }
+
     final response = await http.post(
         Uri.parse('${AppConstants.baseUrl}/auth/register'),
         body: jsonEncode({
@@ -33,8 +41,6 @@ class AuthRemoteDataSource {
         }
     );
 
-    print('Register status: ${response.statusCode}');
-    print('Register body: ${response.body}');
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final data = jsonDecode(response.body);

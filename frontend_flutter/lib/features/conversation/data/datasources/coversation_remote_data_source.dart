@@ -5,10 +5,16 @@ import 'package:chat_app/features/conversation/data/models/coversation_model.dar
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../../core/network_checker.dart';
+
 class ConversationsRemoteDataSource {
   final _storage = FlutterSecureStorage();
 
   Future<List<ConversationModel>> fetchConversations() async {
+    if (!await NetworkChecker.hasNetwork()){
+      throw Exception('No internet connection');
+    }
+
    String token = await _storage.read(key: 'token') ?? '';
     final response = await http.get(
       Uri.parse('${AppConstants.baseUrl}/conversations'),
@@ -28,6 +34,10 @@ class ConversationsRemoteDataSource {
   }
 
   Future<String> checkOrCreateConversation({required String contactId}) async {
+    if (!await NetworkChecker.hasNetwork()){
+      throw Exception('No internet connection');
+    }
+
     String token = await _storage.read(key: 'token') ?? '';
     final response = await http.post(
       Uri.parse('${AppConstants.baseUrl}/conversations/check-or-create'),
@@ -56,7 +66,6 @@ class ConversationsRemoteDataSource {
       },
     );
 
-    print('Mark read status: ${response.statusCode}, body: ${response.body}');
 
     if (response.statusCode != 200) {
       throw Exception('Failed to mark as read: ${response.body}');

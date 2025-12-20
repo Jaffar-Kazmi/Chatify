@@ -70,6 +70,17 @@ class _RegisterPageState extends State<RegisterPage> {
                         child: CircularProgressIndicator(),
                       );
                     }
+                    if (state is AuthFailure && state.error.contains('No internet connection')) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10.0),
+                        child: Center(
+                            child: Text(
+                              'No Internet Connection',
+                              style: TextStyle(color: AppColors.error),
+                            )
+                        ),
+                      );
+                    }
                     return  AuthButton(
                         text: 'Register',
                         onPressed: _onRegister

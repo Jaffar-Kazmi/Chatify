@@ -24,7 +24,8 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactState> {
       final contacts = await fetchContactsUseCase();
       emit(ContactLoaded(contacts));
     } catch (e) {
-      emit(ContactError('Failed to fetch contacts'));
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      emit(ContactError(msg.isEmpty ? 'Failed to fetch contacts' : msg));
     }
   }
 
@@ -35,7 +36,8 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactState> {
       emit(ContactAdded());
       add(FetchContacts());
     } catch (e) {
-      emit(ContactError('Failed to fetch contacts'));
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      emit(ContactError(msg.isEmpty ? 'Failed to add contact' : msg));
     }
   }
 
@@ -45,7 +47,8 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactState> {
       final conversationId = await checkOrCreateConversationUseCase(contactId: event.contactId);
       emit(ConversationReady(conversationId: conversationId, contactName: event.contactName, contactProfileImageUrl: event.contactProfileImageUrl));
     } catch (e) {
-      emit(ContactError('Failed to start conversation.'));
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      emit(ContactError(msg.isEmpty ? 'Failed to start conversation' : msg));
     }
   }
 

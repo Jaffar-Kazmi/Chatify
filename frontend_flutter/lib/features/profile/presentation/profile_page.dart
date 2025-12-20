@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme.dart';
+import '../../../../core/widgets/no_internet_widget.dart';
 import '../../auth/presentation/pages/login_page.dart';
 import '../data/datasources/profile_remote_data_sources.dart';
 import '../data/models/profile_model.dart';
@@ -29,6 +30,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _showPassword = false;
   bool _showNewPass = false;
   bool _changingPassword = false;
+  bool _noInternet = false;
   File? _imageFile;
   ProfileModel? _profile;
 
@@ -39,15 +41,24 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadProfile() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _noInternet = false;
+    });
     try {
       _profile = await _profileDataSource.getProfile();
       _usernameController.text = _profile!.username;
       _emailController.text = _profile!.email;
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to load profile')),
-      );
+      if (e.toString().contains('No internet connection')) {
+        setState(() {
+          _noInternet = true;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load profile')),
+        );
+      }
     }
     setState(() => _isLoading = false);
   }
@@ -101,9 +112,15 @@ class _ProfilePageState extends State<ProfilePage> {
         _confirmPassController.clear();
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update profile')),
-      );
+      if (e.toString().contains('No internet connection')) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text('No internet connection')),
+         );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update profile')),
+        );
+      }
     }
     setState(() => _isLoading = false);
   }
@@ -127,7 +144,7 @@ class _ProfilePageState extends State<ProfilePage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: ${e.toString()}'),
+          content: Text(e.toString().contains('No internet connection') ? 'No internet connection' : 'Error: ${e.toString()}'),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 5),
         ),
@@ -151,6 +168,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_noInternet) {
+      return NoInternetWidget(onRetry: _loadProfile);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Profile', style: TextStyle(color: DefaultColors.headerColor)),

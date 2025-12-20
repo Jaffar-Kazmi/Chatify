@@ -3,12 +3,17 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:chat_app/core/constants.dart';
+import '../../../../core/network_checker.dart';
 import '../models/profile_model.dart';
 
 class ProfileRemoteDataSource {
   final _storage = FlutterSecureStorage();
 
   Future<ProfileModel> getProfile() async {
+    if (!await NetworkChecker.hasNetwork()){
+      throw Exception('No internet connection');
+    }
+
     String token = await _storage.read(key: 'token') ?? '';
     final response = await http.get(
       Uri.parse('${AppConstants.baseUrl}/profile'),
@@ -23,6 +28,10 @@ class ProfileRemoteDataSource {
   }
 
   Future<ProfileModel> updateProfile(ProfileModel profile) async {
+    if (!await NetworkChecker.hasNetwork()){
+      throw Exception('No internet connection');
+    }
+
     String token = await _storage.read(key: 'token') ?? '';
     final response = await http.put(
       Uri.parse('${AppConstants.baseUrl}/profile'),
@@ -32,8 +41,6 @@ class ProfileRemoteDataSource {
       },
       body: jsonEncode(profile.toJson()),
     );
-    print('Update profile status: ${response.statusCode}');
-    print('Update profile body: ${response.body}');
 
     if (response.statusCode == 200) {
       return ProfileModel.fromJson(jsonDecode(response.body));
@@ -43,6 +50,10 @@ class ProfileRemoteDataSource {
   }
 
   Future<String> uploadProfilePic(File imageFile) async {
+    if (!await NetworkChecker.hasNetwork()){
+      throw Exception('No internet connection');
+    }
+
     String token = await _storage.read(key: 'token') ?? '';
     var request = http.MultipartRequest('POST', Uri.parse('${AppConstants.baseUrl}/profile/upload'));
     request.headers['Authorization'] = 'Bearer $token';
@@ -84,6 +95,10 @@ class ProfileRemoteDataSource {
   }
 
   Future<void> changePassword(String currentPassword, String newPassword) async {
+    if (!await NetworkChecker.hasNetwork()){
+      throw Exception('No internet connection');
+    }
+
   final storage = FlutterSecureStorage();
   final token = await storage.read(key: 'token');
 
@@ -101,8 +116,6 @@ class ProfileRemoteDataSource {
   }),
   );
 
-  print('Status Code: ${response.statusCode}');
-  print('Response Body: ${response.body}');
 
   if (response.statusCode != 200) {
   // Parse error from backend

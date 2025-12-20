@@ -16,6 +16,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:gal/gal.dart';
 
 import '../../../../core/theme.dart';
+import '../../../../core/widgets/no_internet_widget.dart';
 import '../bloc/chat_bloc.dart';
 import '../bloc/chat_state.dart';
 
@@ -184,7 +185,6 @@ class _ChatPageState extends State<ChatPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to save image: $e')),
       );
-      print('Failed to save image: $e');
     }
   }
 
@@ -272,60 +272,72 @@ class _ChatPageState extends State<ChatPage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: BlocBuilder<ChatBloc, ChatState>(
-              builder: (context, state) {
-                if (state is ChatLoadingState) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else if (state is ChatLoadedState) {
-                  final all = state.messages;
-                  final filtered = _searchQuery.isEmpty
-                      ? all
-                      : all
-                      .where((m) => m.content
-                      .toLowerCase()
-                      .contains(_searchQuery))
-                      .toList();
-
-                  if (filtered.isEmpty) {
-                    return const Center(
-                        child: Text('No messages found.'));
-                  }
-
-                  return ListView.builder(
-                    padding: EdgeInsets.only(top: 16, bottom: 16),
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final message = filtered[index];
-                      final isSentMessage = message.senderId == userId;
-                      final isDailyQuestion =
-                          message.senderId == botId;
-
-                      if (isSentMessage) {
-                        return _buildSentMessage(
-                            context, message.content);
-                      } else if (isDailyQuestion) {
-                        return _buildDailyQuestionMessage(
-                            context, message.content);
-                      } else {
-                        return _buildReceivedMessage(
-                            context, message.content);
-                      }
-                    },
-                  );
-                } else if (state is ChatErrorState) {
-                  return Center(child: Text(state.error));
-                }
-                return const Center(child: Text('No messages found.'));
+      body: BlocBuilder<ChatBloc, ChatState>(
+        builder: (context, state) {
+          if (state is ChatErrorState && state.error.contains('No internet connection')) {
+            return NoInternetWidget(
+              onRetry: () {
+                BlocProvider.of<ChatBloc>(context).add(LoadMessagesEvent(widget.conversationId));
               },
-            ),
-          ),
-          _buildMessageInput(),
-        ],
+            );
+          }
+
+          return Column(
+            children: [
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    if (state is ChatLoadingState) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    } else if (state is ChatLoadedState) {
+                      final all = state.messages;
+                      final filtered = _searchQuery.isEmpty
+                          ? all
+                          : all
+                          .where((m) => m.content
+                          .toLowerCase()
+                          .contains(_searchQuery))
+                          .toList();
+
+                      if (filtered.isEmpty) {
+                        return const Center(
+                            child: Text('No messages found.'));
+                      }
+
+                      return ListView.builder(
+                        padding: EdgeInsets.only(top: 16, bottom: 16),
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final message = filtered[index];
+                          final isSentMessage = message.senderId == userId;
+                          final isDailyQuestion =
+                              message.senderId == botId;
+
+                          if (isSentMessage) {
+                            return _buildSentMessage(
+                                context, message.content);
+                          } else if (isDailyQuestion) {
+                            return _buildDailyQuestionMessage(
+                                context, message.content);
+                          } else {
+                            return _buildReceivedMessage(
+                                context, message.content);
+                          }
+                        },
+                      );
+                    } else if (state is ChatErrorState) {
+                      return Center(child: Text(state.error));
+                    }
+                    return const Center(child: Text('No messages found.'));
+                  }
+                ),
+              ),
+              _buildMessageInput(),
+            ],
+          );
+        },
       ),
     );
   }

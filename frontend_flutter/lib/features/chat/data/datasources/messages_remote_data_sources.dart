@@ -4,11 +4,10 @@ import 'dart:io';
 import 'package:chat_app/core/constants.dart';
 import 'package:chat_app/features/chat/data/models/daily_question_model.dart';
 import 'package:chat_app/features/chat/domain/entities/daily_question_entity.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../../core/network_checker.dart';
 import '../../../../core/socket_service.dart';
 import '../../domain/entities/message_entity.dart';
 import '../../presentation/bloc/chat_event.dart';
@@ -27,6 +26,10 @@ class MessageRemoteDataSource {
 
 
   Future<List<MessageEntity>> fetchMessages(String conversationId) async {
+    if (!await NetworkChecker.hasNetwork()){
+      throw Exception('No internet connection');
+    }
+
     String token = await _storage.read(key: 'token') ?? '';
     final response = await http.get(
         Uri.parse('${AppConstants.baseUrl}/messages/$conversationId'),
@@ -53,6 +56,10 @@ class MessageRemoteDataSource {
   }
 
   Future<DailyQuestionEntity> fetchDailyQuestion(String conversationId) async {
+    if (!await NetworkChecker.hasNetwork()){
+      throw Exception('No internet connection');
+    }
+
     String token = await _storage.read(key: 'token') ?? '';
     final response = await http.get(
         Uri.parse('${AppConstants.baseUrl}/conversations/$conversationId/daily-question'),
@@ -70,6 +77,10 @@ class MessageRemoteDataSource {
   }
 
   Future<void> deleteConversation(String conversationId) async {
+    if (!await NetworkChecker.hasNetwork()){
+      throw Exception('No internet connection');
+    }
+
     String token = await _storage.read(key: 'token') ?? '';
     final response = await http.delete(
       Uri.parse('${AppConstants.baseUrl}/conversations/$conversationId'),
@@ -85,8 +96,11 @@ class MessageRemoteDataSource {
   }
 
   Future<void> sendMessage({required String conversationId, required String content,}) async {
+    if (!await NetworkChecker.hasNetwork()){
+      throw Exception('No internet connection');
+    }
+
     final userId = await _storage.read(key: 'userId') ?? '';
-    print('userId: $userId');
 
     final now = DateTime.now().toIso8601String();
 
@@ -98,12 +112,15 @@ class MessageRemoteDataSource {
       'created_at': now,
     };
 
-    print('sendMessage payload: $newMessage');
 
     _socketService.socket.emit('sendMessage', newMessage);
   }
 
   Future<String> uploadImage(File imageFile) async {
+    if (!await NetworkChecker.hasNetwork()){
+      throw Exception('No internet connection');
+    }
+
     final token = await _storage.read(key: 'token') ?? '';
 
     final request = http.MultipartRequest(

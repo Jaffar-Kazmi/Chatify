@@ -20,7 +20,6 @@ class ConversationsBloc extends Bloc<ConversationEvent, ConversationState> {
     try {
       _socketService.socket.on('conversationUpdated', onConversationUpdated);
     } catch (e) {
-      print("Error initializing socket listeners: $e");
     }
   }
 
@@ -34,10 +33,9 @@ class ConversationsBloc extends Bloc<ConversationEvent, ConversationState> {
     try {
       final conversations = await fetchConversationsUseCase();
       emit(ConversationLoaded(conversations));
-    } catch (error, stack) {
-      print('FetchConversations error: $error');
-      print(stack);
-      emit(ConversationError('Failed to fetch conversations.'));
+    } catch (error) {
+      final msg = error.toString().replaceFirst('Exception: ', '');
+      emit(ConversationError(msg.isEmpty ? 'Failed to fetch conversations.' : msg));
     }
   }
 
